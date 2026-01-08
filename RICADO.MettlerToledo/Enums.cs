@@ -20,7 +20,8 @@ namespace RICADO.MettlerToledo
 
     public enum ConnectionMethod
     {
-        Ethernet
+        Ethernet,
+        Serial
     }
 
     public enum ProtocolType

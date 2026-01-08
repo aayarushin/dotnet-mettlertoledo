@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +15,13 @@ namespace RICADO.MettlerToledo
         private readonly ConnectionMethod _connectionMethod;
         private readonly string _remoteHost;
         private readonly int _port;
+
+        private readonly string _portName;
+        private readonly int _baudRate;
+        private readonly Parity _parity;
+        private readonly int _dataBits;
+        private readonly StopBits _stopBits;
+        private readonly Handshake _handshake;
         private int _timeout;
         private int _retries;
 
@@ -41,6 +49,18 @@ namespace RICADO.MettlerToledo
         public string RemoteHost => _remoteHost;
 
         public int Port => _port;
+
+        public string PortName => _portName;
+
+        public int BaudRate => _baudRate;
+
+        public Parity Parity => _parity;
+
+        public int DataBits => _dataBits;
+
+        public StopBits StopBits => _stopBits;
+
+        public Handshake Handshake => _handshake;
 
         public int Timeout
         {
@@ -124,6 +144,59 @@ namespace RICADO.MettlerToledo
             _retries = retries;
         }
 
+        public MettlerToledoDevice(ProtocolType protocolType, string portName, int baudRate = 9600, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One, Handshake handshake = Handshake.None, int timeout = 2000, int retries = 1)
+        {
+            _connectionMethod = ConnectionMethod.Serial;
+
+            _protocolType = protocolType;
+
+            if (portName == null)
+            {
+                throw new ArgumentNullException(nameof(portName), "The Port Name cannot be Null");
+            }
+
+            if (portName.Length == 0)
+            {
+                throw new ArgumentException("The Port Name cannot be Empty", nameof(portName));
+            }
+
+            _portName = portName;
+
+            if (baudRate <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(baudRate), "The Baud Rate cannot be less than 1");
+            }
+
+            _baudRate = baudRate;
+
+            _parity = parity;
+
+            if (dataBits < 5 || dataBits > 8)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dataBits), "The Data Bits must be between 5 and 8");
+            }
+
+            _dataBits = dataBits;
+
+            _stopBits = stopBits;
+
+            _handshake = handshake;
+
+            if (timeout <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(timeout), "The Timeout Value cannot be less than 1");
+            }
+
+            _timeout = timeout;
+
+            if (retries < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(retries), "The Retries Value cannot be Negative");
+            }
+
+            _retries = retries;
+        }
+
         #endregion
 
 
@@ -140,26 +213,54 @@ namespace RICADO.MettlerToledo
             }
 
             // Initialize the Channel
-            if (_connectionMethod == ConnectionMethod.Ethernet)
+            switch (_connectionMethod)
             {
-                try
-                {
-                    _channel = new EthernetChannel(_remoteHost, _port);
+                case ConnectionMethod.Ethernet:
+                    try
+                    {
+                        _channel = new EthernetChannel(_remoteHost, _port);
 
-                    await _channel.InitializeAsync(_timeout, cancellationToken);
-                }
-                catch (ObjectDisposedException)
-                {
-                    throw new MettlerToledoException("Failed to Create the Ethernet Communication Channel for Mettler Toledo Device '" + _remoteHost + ":" + _port + "' - The underlying Socket Connection has been Closed");
-                }
-                catch (TimeoutException)
-                {
-                    throw new MettlerToledoException("Failed to Create the Ethernet Communication Channel within the Timeout Period for Mettler Toledo Device '" + _remoteHost + ":" + _port + "'");
-                }
-                catch (System.Net.Sockets.SocketException e)
-                {
-                    throw new MettlerToledoException("Failed to Create the Ethernet Communication Channel for Mettler Toledo Device '" + _remoteHost + ":" + _port + "'", e);
-                }
+                        await _channel.InitializeAsync(_timeout, cancellationToken);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        throw new MettlerToledoException("Failed to Create the Ethernet Communication Channel for Mettler Toledo Device '" + _remoteHost + ":" + _port + "' - The underlying Socket Connection has been Closed");
+                    }
+                    catch (TimeoutException)
+                    {
+                        throw new MettlerToledoException("Failed to Create the Ethernet Communication Channel within the Timeout Period for Mettler Toledo Device '" + _remoteHost + ":" + _port + "'");
+                    }
+                    catch (System.Net.Sockets.SocketException e)
+                    {
+                        throw new MettlerToledoException("Failed to Create the Ethernet Communication Channel for Mettler Toledo Device '" + _remoteHost + ":" + _port + "'", e);
+                    }
+
+                    break;
+                case ConnectionMethod.Serial:
+                    try
+                    {
+                        _channel = new SerialChannel(_portName, _baudRate, _parity, _dataBits, _stopBits, _handshake);
+
+                        await _channel.InitializeAsync(_timeout, cancellationToken);
+                    }
+                    catch (UnauthorizedAccessException e)
+                    {
+                        throw new MettlerToledoException("Failed to Create the Serial Communication Channel for Mettler Toledo Device '" + _portName + "' - Access Denied", e);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        throw new MettlerToledoException("Failed to Create the Serial Communication Channel for Mettler Toledo Device '" + _portName + "' - Invalid Port Name", e);
+                    }
+                    catch (System.IO.IOException e)
+                    {
+                        throw new MettlerToledoException("Failed to Create the Serial Communication Channel for Mettler Toledo Device '" + _portName + "'", e);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        throw new MettlerToledoException("Failed to Create the Serial Communication Channel for Mettler Toledo Device '" + _portName + "' - The Port is already Open", e);
+                    }
+
+                    break;
             }
 
             lock (_isInitializedLock)
@@ -170,7 +271,7 @@ namespace RICADO.MettlerToledo
 
         public void Dispose()
         {
-            if (_channel is EthernetChannel)
+            if (_channel != null)
             {
                 _channel.Dispose();
 

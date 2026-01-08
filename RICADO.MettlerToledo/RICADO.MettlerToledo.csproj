@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <PackageReference Include="RICADO.Sockets" Version="1.4.0" />
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
   </ItemGroup>
 
 </Project>
