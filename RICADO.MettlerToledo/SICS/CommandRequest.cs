@@ -5,34 +5,17 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class CommandRequest : Request
     {
-        #region Private Fields
-
         private readonly CommandType _command;
 
-        #endregion
-
-
-        #region Public Properties
-
         public CommandType Command => _command;
-
-        #endregion
-
-
-        #region Constructor
 
         protected CommandRequest(CommandType command, string commandCode) : base(commandCode)
         {
             _command = command;
         }
 
-        #endregion
-
-
-        #region Public Methods
-
 #if NETSTANDARD
-        public void ValidateResponseMessage(byte[] responseMessage)
+      public void ValidateResponseMessage(byte[] responseMessage)
 #else
         public void ValidateResponseMessage(Memory<byte> responseMessage)
 #endif
@@ -42,7 +25,7 @@ namespace RICADO.MettlerToledo.SICS
 
         public static CommandRequest CreateNew(MettlerToledoDevice device, CommandType command)
         {
-            switch(command)
+            switch (command)
             {
                 case CommandType.ZeroStable:
                     return new CommandRequest(CommandType.ZeroStable, Commands.ZeroStableCommand);
@@ -63,15 +46,8 @@ namespace RICADO.MettlerToledo.SICS
             throw new SICSException("Unknown Command Type '" + command.ToString() + "'");
         }
 
-        #endregion
-
-
-        #region Protected Methods
-
         protected override void BuildMessageDetail(ref StringBuilder messageBuilder)
         {
         }
-
-        #endregion
     }
 }

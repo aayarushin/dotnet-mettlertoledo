@@ -10,8 +10,6 @@ namespace RICADO.MettlerToledo
 {
     public class MettlerToledoDevice : IDisposable
     {
-        #region Private Fields
-
         private readonly ConnectionMethod _connectionMethod;
         private readonly string _remoteHost;
         private readonly int _port;
@@ -32,17 +30,7 @@ namespace RICADO.MettlerToledo
 
         private ProtocolType _protocolType;
 
-        #endregion
-
-
-        #region Internal Properties
-
         internal IChannel Channel => _channel;
-
-        #endregion
-
-
-        #region Public Properties
 
         public ConnectionMethod ConnectionMethod => _connectionMethod;
 
@@ -98,11 +86,6 @@ namespace RICADO.MettlerToledo
                 }
             }
         }
-
-        #endregion
-
-
-        #region Constructors
 
         public MettlerToledoDevice(ConnectionMethod connectionMethod, ProtocolType protocolType, string remoteHost, int port, int timeout = 2000, int retries = 1)
         {
@@ -196,11 +179,6 @@ namespace RICADO.MettlerToledo
 
             _retries = retries;
         }
-
-        #endregion
-
-
-        #region Public Methods
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
@@ -397,14 +375,5 @@ namespace RICADO.MettlerToledo
 
             return new ReadWeightAndStatusResult(result, response.StableStatus, response.CenterOfZero, response.GrossWeight, response.NetWeight, response.TareWeight, response.Units);
         }
-
-        #endregion
-
-
-        #region Private Methods
-
-
-
-        #endregion
     }
 }

@@ -5,16 +5,9 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadWeightAndStatusRequest : Request
     {
-        #region Constructor
-
         protected ReadWeightAndStatusRequest(string commandCode) : base(commandCode)
         {
         }
-
-        #endregion
-
-
-        #region Public Methods
 
 #if NETSTANDARD
         public ReadWeightAndStatusResponse UnpackResponseMessage(byte[] responseMessage)
@@ -33,15 +26,8 @@ namespace RICADO.MettlerToledo.SICS
             return new ReadWeightAndStatusRequest(Commands.ReadWeightAndStatus);
         }
 
-        #endregion
-
-
-        #region Protected Methods
-
         protected override void BuildMessageDetail(ref StringBuilder messageBuilder)
         {
         }
-
-        #endregion
     }
 }

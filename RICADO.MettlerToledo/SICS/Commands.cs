@@ -4,8 +4,6 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal static class Commands
     {
-        #region Public Properties
-
         public static readonly string ReadWeightAndStatus = "SIX1";
         public static readonly string ReadTareWeight = "TA";
         public static readonly string ReadNetWeight = "SI";
@@ -16,7 +14,5 @@ namespace RICADO.MettlerToledo.SICS
         public static readonly string ClearTareCommand = "TAC";
         public static readonly string ReadFirmwareRevision = "I3";
         public static readonly string ReadSerialNumber = "I4";
-
-        #endregion
     }
 }

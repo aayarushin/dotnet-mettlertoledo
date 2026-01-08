@@ -8,35 +8,13 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal abstract class Response
     {
-        #region Constants
-
         public const ushort ETXLength = 2;
-
-        #endregion
-
-
-        #region Private Fields
 
         private readonly Request _request;
 
-        #endregion
-
-
-        #region Protected Properties
-
         protected virtual Request Request => _request;
 
-        #endregion
-
-
-        #region Public Properties
-
         public static readonly byte[] ETX = new byte[] { (byte)'\r', (byte)'\n' };
-
-        #endregion
-
-
-        #region Constructor
 
 #if NETSTANDARD
         protected Response(Request request, byte[] responseMessage)
@@ -52,15 +30,15 @@ namespace RICADO.MettlerToledo.SICS
             }
 
 #if NETSTANDARD
-            if (responseMessage.Skip(responseMessage.Length - ETXLength).Take(ETXLength).SequenceEqual(ETX) == false)
-            {
-                throw new SICSException("Invalid or Missing ETX");
-            }
+         if (responseMessage.Skip(responseMessage.Length - ETXLength).Take(ETXLength).SequenceEqual(ETX) == false)
+         {
+      throw new SICSException("Invalid or Missing ETX");
+ }
 
-            string messageString = Encoding.ASCII.GetString(responseMessage.Take(responseMessage.Length - ETXLength).ToArray());
+    string messageString = Encoding.ASCII.GetString(responseMessage.Take(responseMessage.Length - ETXLength).ToArray());
 #else
-            
-            
+
+
             if (responseMessage.Slice(responseMessage.Length - ETXLength, ETXLength).Span.SequenceEqual(ETX) == false)
             {
                 throw new SICSException("Invalid or Missing ETX");
@@ -92,13 +70,6 @@ namespace RICADO.MettlerToledo.SICS
             UnpackMessageDetail(request, messageString);
         }
 
-        #endregion
-
-
-        #region Protected Methods
-
         protected abstract void UnpackMessageDetail(Request request, string messageDetail);
-
-        #endregion
     }
 }

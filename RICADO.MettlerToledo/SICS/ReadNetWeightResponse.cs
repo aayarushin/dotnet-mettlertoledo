@@ -5,32 +5,15 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadNetWeightResponse : Response
     {
-        #region Constants
-
         private const string SuccessMessageRegex = "^S [SD]\u0020+([0-9\u002E\\-]+) (.*)$";
         private const string OutOfRangeMessageRegex = "^S [\u002B\\-\u002D]";
         private const string FailureMessageRegex = "^S [AI]";
 
-        #endregion
-
-
-        #region Private Fields
-
         private double _netWeight;
         private string _units;
 
-        #endregion
-
-
-        #region Public Properties
-
         public double NetWeight => _netWeight;
         public string Units => _units;
-
-        #endregion
-
-
-        #region Constructor
 
 #if NETSTANDARD
         protected ReadNetWeightResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
@@ -41,11 +24,6 @@ namespace RICADO.MettlerToledo.SICS
         {
         }
 #endif
-
-        #endregion
-
-
-        #region Public Methods
 
 #if NETSTANDARD
         public static ReadNetWeightResponse UnpackResponseMessage(ReadNetWeightRequest request, byte[] responseMessage)
@@ -58,11 +36,6 @@ namespace RICADO.MettlerToledo.SICS
             return new ReadNetWeightResponse(request, responseMessage);
         }
 #endif
-
-        #endregion
-
-
-        #region Protected Methods
 
         protected override void UnpackMessageDetail(Request request, string messageDetail)
         {
@@ -87,7 +60,7 @@ namespace RICADO.MettlerToledo.SICS
 
             double weight;
 
-            if(double.TryParse(regexSplit[1], out weight) == false)
+            if (double.TryParse(regexSplit[1], out weight) == false)
             {
                 throw new SICSException("Failed to Extract a Weight Value from the Read Net Weight Response");
             }
@@ -96,7 +69,5 @@ namespace RICADO.MettlerToledo.SICS
 
             _units = regexSplit[2];
         }
-
-        #endregion
     }
 }

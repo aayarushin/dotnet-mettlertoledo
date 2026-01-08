@@ -5,20 +5,13 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class CommandResponse : Response
     {
-        #region Constants
-
         private const string SuccessMessageRegex = "^(Z|ZI|T|TI|TAC) [ADS]";
         private const string OutOfRangeMessageRegex = "^(Z|ZI|T|TI|TAC) [\u002B\u002D\\-]";
         private const string FailureMessageRegex = "^(Z|ZI|T|TI|TAC) [I]";
 
-        #endregion
-
-
-        #region Constructor
-
 #if NETSTANDARD
         protected CommandResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
-        {
+     {
         }
 #else
         protected CommandResponse(Request request, Memory<byte> responseMessage) : base(request, responseMessage)
@@ -26,15 +19,10 @@ namespace RICADO.MettlerToledo.SICS
         }
 #endif
 
-        #endregion
-
-
-        #region Public Methods
-
 #if NETSTANDARD
-        public static void ValidateResponseMessage(CommandRequest request, byte[] responseMessage)
-        {
-            _ = new CommandResponse(request, responseMessage);
+   public static void ValidateResponseMessage(CommandRequest request, byte[] responseMessage)
+   {
+ _ = new CommandResponse(request, responseMessage);
         }
 #else
         public static void ValidateResponseMessage(CommandRequest request, Memory<byte> responseMessage)
@@ -42,11 +30,6 @@ namespace RICADO.MettlerToledo.SICS
             _ = new CommandResponse(request, responseMessage);
         }
 #endif
-
-        #endregion
-
-
-        #region Protected Methods
 
         protected override void UnpackMessageDetail(Request request, string messageDetail)
         {
@@ -117,7 +100,5 @@ namespace RICADO.MettlerToledo.SICS
                 }
             }
         }
-
-        #endregion
     }
 }

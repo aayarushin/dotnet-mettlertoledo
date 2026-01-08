@@ -10,8 +10,6 @@ namespace RICADO.MettlerToledo.Channels
 {
     internal class SerialChannel : IChannel
     {
-        #region Private Fields
-
         private readonly string _portName;
         private readonly int _baudRate;
         private readonly Parity _parity;
@@ -22,11 +20,6 @@ namespace RICADO.MettlerToledo.Channels
         private SerialPort _serialPort;
 
         private readonly SemaphoreSlim _semaphore;
-
-        #endregion
-
-
-        #region Internal Properties
 
         internal string PortName => _portName;
 
@@ -40,11 +33,6 @@ namespace RICADO.MettlerToledo.Channels
 
         internal Handshake Handshake => _handshake;
 
-        #endregion
-
-
-        #region Constructors
-
         internal SerialChannel(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, Handshake handshake)
         {
             _portName = portName;
@@ -56,11 +44,6 @@ namespace RICADO.MettlerToledo.Channels
 
             _semaphore = new SemaphoreSlim(1, 1);
         }
-
-        #endregion
-
-
-        #region Public Methods
 
         public void Dispose()
         {
@@ -82,11 +65,6 @@ namespace RICADO.MettlerToledo.Channels
 
             _semaphore.Dispose();
         }
-
-        #endregion
-
-
-        #region Internal Methods
 
         public Task InitializeAsync(int timeout, CancellationToken cancellationToken)
         {
@@ -110,7 +88,7 @@ namespace RICADO.MettlerToledo.Channels
         }
 
 #if NETSTANDARD
-        public async Task<ProcessMessageResult> ProcessMessageAsync(byte[] requestMessage, ProtocolType protocol, int timeout, int retries, CancellationToken cancellationToken)
+    public async Task<ProcessMessageResult> ProcessMessageAsync(byte[] requestMessage, ProtocolType protocol, int timeout, int retries, CancellationToken cancellationToken)
 #else
         public async Task<ProcessMessageResult> ProcessMessageAsync(ReadOnlyMemory<byte> requestMessage, ProtocolType protocol, int timeout, int retries, CancellationToken cancellationToken)
 #endif
@@ -123,7 +101,7 @@ namespace RICADO.MettlerToledo.Channels
             DateTime startTimestamp = DateTime.UtcNow;
 
 #if NETSTANDARD
-            byte[] responseMessage = new byte[0];
+    byte[] responseMessage = new byte[0];
 #else
             Memory<byte> responseMessage = new Memory<byte>();
 #endif
@@ -183,11 +161,6 @@ namespace RICADO.MettlerToledo.Channels
                 ResponseMessage = responseMessage,
             };
         }
-
-        #endregion
-
-
-        #region Private Methods
 
         private void initializePort(int timeout)
         {
@@ -264,7 +237,7 @@ namespace RICADO.MettlerToledo.Channels
             try
             {
 #if NETSTANDARD
-                _serialPort.Write(message, 0, message.Length);
+     _serialPort.Write(message, 0, message.Length);
                 result.Bytes = message.Length;
 #else
                 _serialPort.Write(message.ToArray(), 0, message.Length);
@@ -293,9 +266,9 @@ namespace RICADO.MettlerToledo.Channels
 #if NETSTANDARD
             ReceiveMessageResult result = new ReceiveMessageResult
             {
-                Bytes = 0,
-                Packets = 0,
-                Message = new byte[0],
+  Bytes = 0,
+         Packets = 0,
+         Message = new byte[0],
             };
 #else
             ReceiveMessageResult result = new ReceiveMessageResult
@@ -396,7 +369,7 @@ namespace RICADO.MettlerToledo.Channels
         }
 
 #if NETSTANDARD
-        private byte[] trimReceivedData(ProtocolType protocol, List<byte> receivedData)
+   private byte[] trimReceivedData(ProtocolType protocol, List<byte> receivedData)
 #else
         private Memory<byte> trimReceivedData(ProtocolType protocol, List<byte> receivedData)
 #endif
@@ -404,7 +377,7 @@ namespace RICADO.MettlerToledo.Channels
             if (receivedData.Count == 0)
             {
 #if NETSTANDARD
-                return Array.Empty<byte>();
+           return Array.Empty<byte>();
 #else
                 return Memory<byte>.Empty;
 #endif
@@ -416,7 +389,5 @@ namespace RICADO.MettlerToledo.Channels
 
             return receivedData.Take(etxIndex + etxBytes.Length).ToArray();
         }
-
-        #endregion
     }
 }

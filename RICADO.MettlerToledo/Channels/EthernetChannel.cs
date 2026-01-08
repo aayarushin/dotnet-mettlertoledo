@@ -9,8 +9,6 @@ namespace RICADO.MettlerToledo.Channels
 {
     internal class EthernetChannel : IChannel
     {
-        #region Private Fields
-
         private readonly string _remoteHost;
         private readonly int _port;
 
@@ -18,19 +16,9 @@ namespace RICADO.MettlerToledo.Channels
 
         private readonly SemaphoreSlim _semaphore;
 
-        #endregion
-
-
-        #region Internal Properties
-
         internal string RemoteHost => _remoteHost;
 
         internal int Port => _port;
-
-        #endregion
-
-
-        #region Constructors
 
         internal EthernetChannel(string remoteHost, int port)
         {
@@ -39,11 +27,6 @@ namespace RICADO.MettlerToledo.Channels
 
             _semaphore = new SemaphoreSlim(1, 1);
         }
-
-        #endregion
-
-
-        #region Public Methods
 
         public void Dispose()
         {
@@ -61,11 +44,6 @@ namespace RICADO.MettlerToledo.Channels
 
             _semaphore.Dispose();
         }
-
-        #endregion
-
-
-        #region Internal Methods
 
         public async Task InitializeAsync(int timeout, CancellationToken cancellationToken)
         {
@@ -161,11 +139,6 @@ namespace RICADO.MettlerToledo.Channels
             };
         }
 
-        #endregion
-
-
-        #region Private Methods
-
         private Task initializeClient(int timeout, CancellationToken cancellationToken)
         {
             _client = new TcpClient(RemoteHost, Port);
@@ -219,7 +192,7 @@ namespace RICADO.MettlerToledo.Channels
                 Packets = 0,
             };
 
-            if(_client == null)
+            if (_client == null)
             {
                 throw new MettlerToledoException("Failed to Send " + protocol + " Message to Mettler Toledo Ethernet Device '" + RemoteHost + ":" + Port + "' - The underlying Socket Connection has been Closed");
             }
@@ -250,10 +223,10 @@ namespace RICADO.MettlerToledo.Channels
 #if NETSTANDARD
             ReceiveMessageResult result = new ReceiveMessageResult
             {
-                Bytes = 0,
-                Packets = 0,
-                Message = new byte[0],
-            };
+     Bytes = 0,
+      Packets = 0,
+   Message = new byte[0],
+   };
 #else
             ReceiveMessageResult result = new ReceiveMessageResult
             {
@@ -263,7 +236,7 @@ namespace RICADO.MettlerToledo.Channels
             };
 #endif
 
-            if(_client == null)
+            if (_client == null)
             {
                 throw new MettlerToledoException("Failed to Receive " + protocol + " Message from Mettler Toledo Ethernet Device '" + RemoteHost + ":" + Port + "' - The underlying Socket Connection has been Closed");
             }
@@ -278,7 +251,7 @@ namespace RICADO.MettlerToledo.Channels
                 while (DateTime.UtcNow.Subtract(startTimestamp).TotalMilliseconds < timeout && receiveCompleted == false)
                 {
 #if NETSTANDARD
-                    byte[] buffer = new byte[100];
+            byte[] buffer = new byte[100];
 #else
                     Memory<byte> buffer = new byte[100];
 #endif
@@ -292,7 +265,7 @@ namespace RICADO.MettlerToledo.Channels
                         if (receivedBytes > 0)
                         {
 #if NETSTANDARD
-                            receivedData.AddRange(buffer.Take(receivedBytes));
+        receivedData.AddRange(buffer.Take(receivedBytes));
 #else
                             receivedData.AddRange(buffer.Slice(0, receivedBytes).ToArray());
 #endif
@@ -340,7 +313,7 @@ namespace RICADO.MettlerToledo.Channels
                 return false;
             }
 
-            if(protocol != ProtocolType.SICS)
+            if (protocol != ProtocolType.SICS)
             {
                 return false;
             }
@@ -362,7 +335,7 @@ namespace RICADO.MettlerToledo.Channels
             if (receivedData.Count == 0)
             {
 #if NETSTANDARD
-                return Array.Empty<byte>();
+       return Array.Empty<byte>();
 #else
                 return Memory<byte>.Empty;
 #endif
@@ -374,7 +347,5 @@ namespace RICADO.MettlerToledo.Channels
 
             return receivedData.Take(etxIndex + etxBytes.Length).ToArray();
         }
-
-        #endregion
     }
 }

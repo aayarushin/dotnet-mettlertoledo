@@ -5,16 +5,9 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadTareWeightRequest : Request
     {
-        #region Constructor
-
         protected ReadTareWeightRequest(string commandCode) : base(commandCode)
         {
         }
-
-        #endregion
-
-
-        #region Public Methods
 
 #if NETSTANDARD
         public ReadTareWeightResponse UnpackResponseMessage(byte[] responseMessage)
@@ -33,15 +26,8 @@ namespace RICADO.MettlerToledo.SICS
             return new ReadTareWeightRequest(Commands.ReadTareWeight);
         }
 
-        #endregion
-
-
-        #region Protected Methods
-
         protected override void BuildMessageDetail(ref StringBuilder messageBuilder)
         {
         }
-
-        #endregion
     }
 }

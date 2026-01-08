@@ -5,38 +5,16 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal abstract class Request
     {
-        #region Constants
-
         public const string ETX = "\r\n";
-
-        #endregion
-
-
-        #region Private Fields
 
         private readonly string _commandCode;
 
-        #endregion
-
-
-        #region Public Properties
-
         public string CommandCode => _commandCode;
-
-        #endregion
-
-
-        #region Constructor
 
         protected Request(string commandCode)
         {
             _commandCode = commandCode;
         }
-
-        #endregion
-
-
-        #region Public Methods
 
 #if NETSTANDARD
         public byte[] BuildMessage()
@@ -55,13 +33,6 @@ namespace RICADO.MettlerToledo.SICS
             return Encoding.ASCII.GetBytes(messageBuilder.ToString());
         }
 
-        #endregion
-
-
-        #region Protected Methods
-
         protected abstract void BuildMessageDetail(ref StringBuilder messageBuilder);
-
-        #endregion
     }
 }

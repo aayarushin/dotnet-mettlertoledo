@@ -5,16 +5,9 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadFirmwareRevisionRequest : Request
     {
-        #region Constructor
-
         protected ReadFirmwareRevisionRequest(string commandCode) : base(commandCode)
         {
         }
-
-        #endregion
-
-
-        #region Public Methods
 
 #if NETSTANDARD
         public ReadFirmwareRevisionResponse UnpackResponseMessage(byte[] responseMessage)
@@ -33,15 +26,8 @@ namespace RICADO.MettlerToledo.SICS
             return new ReadFirmwareRevisionRequest(Commands.ReadFirmwareRevision);
         }
 
-        #endregion
-
-
-        #region Protected Methods
-
         protected override void BuildMessageDetail(ref StringBuilder messageBuilder)
         {
         }
-
-        #endregion
     }
 }

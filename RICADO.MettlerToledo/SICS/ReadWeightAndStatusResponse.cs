@@ -5,16 +5,9 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadWeightAndStatusResponse : Response
     {
-        #region Constants
-
         private const string SuccessMessageRegex = "^SIX1 ([SD]) 0 ([ZN]) [RN] R 0 0 0 1 [NMP] ([0-9\u0020\u002E\\-]{9}) ([0-9\u0020\u002E\\-]{9}) ([0-9\u0020\u002E\\-]{9}) (.*)$";
         private const string OutOfRangeMessageRegex = "^SIX1 [\u002B\u002B\\-]";
         private const string FailureMessageRegex = "^SIX1 [/I]";
-
-        #endregion
-
-
-        #region Private Fields
 
         private bool _stableStatus;
         private bool _centerOfZero;
@@ -23,11 +16,6 @@ namespace RICADO.MettlerToledo.SICS
         private double _tareWeight;
         private string _units;
 
-        #endregion
-
-
-        #region Public Properties
-
         public bool StableStatus => _stableStatus;
         public bool CenterOfZero => _centerOfZero;
         public double GrossWeight => _grossWeight;
@@ -35,30 +23,20 @@ namespace RICADO.MettlerToledo.SICS
         public double TareWeight => _tareWeight;
         public string Units => _units;
 
-        #endregion
-
-
-        #region Constructor
-
 #if NETSTANDARD
         protected ReadWeightAndStatusResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
-        {
-        }
+  {
+     }
 #else
         protected ReadWeightAndStatusResponse(Request request, Memory<byte> responseMessage) : base(request, responseMessage)
         {
         }
 #endif
 
-        #endregion
-
-
-        #region Public Methods
-
 #if NETSTANDARD
         public static ReadWeightAndStatusResponse UnpackResponseMessage(ReadWeightAndStatusRequest request, byte[] responseMessage)
-        {
-            return new ReadWeightAndStatusResponse(request, responseMessage);
+  {
+       return new ReadWeightAndStatusResponse(request, responseMessage);
         }
 #else
         public static ReadWeightAndStatusResponse UnpackResponseMessage(ReadWeightAndStatusRequest request, Memory<byte> responseMessage)
@@ -66,11 +44,6 @@ namespace RICADO.MettlerToledo.SICS
             return new ReadWeightAndStatusResponse(request, responseMessage);
         }
 #endif
-
-        #endregion
-
-
-        #region Protected Methods
 
         protected override void UnpackMessageDetail(Request request, string messageDetail)
         {
@@ -97,7 +70,7 @@ namespace RICADO.MettlerToledo.SICS
 
             _centerOfZero = regexSplit[2] == "Z";
 
-            if(double.TryParse(regexSplit[3], out double grossWeight) == false)
+            if (double.TryParse(regexSplit[3], out double grossWeight) == false)
             {
                 throw new SICSException("Failed to Read the Weight and Status. The Gross Weight was Invalid");
             }
@@ -120,7 +93,5 @@ namespace RICADO.MettlerToledo.SICS
 
             _units = regexSplit[6];
         }
-
-        #endregion
     }
 }

@@ -5,16 +5,9 @@ namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadSerialNumberRequest : Request
     {
-        #region Constructor
-
         protected ReadSerialNumberRequest(string commandCode) : base(commandCode)
         {
         }
-
-        #endregion
-
-
-        #region Public Methods
 
 #if NETSTANDARD
         public ReadSerialNumberResponse UnpackResponseMessage(byte[] responseMessage)
@@ -33,15 +26,8 @@ namespace RICADO.MettlerToledo.SICS
             return new ReadSerialNumberRequest(Commands.ReadSerialNumber);
         }
 
-        #endregion
-
-
-        #region Protected Methods
-
         protected override void BuildMessageDetail(ref StringBuilder messageBuilder)
         {
         }
-
-        #endregion
     }
 }

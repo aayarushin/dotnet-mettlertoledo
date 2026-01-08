@@ -10,46 +10,46 @@ namespace RICADO.MettlerToledo
     {
         internal static bool HasSequence(this List<byte> list, byte[] pattern)
         {
-            if(list == null)
+            if (list == null)
             {
                 throw new ArgumentNullException(nameof(list));
             }
-            
+
             return list.ToArray().HasSequence(pattern);
         }
 
         internal static bool HasSequence(this byte[] array, byte[] pattern)
         {
-            if(array == null)
+            if (array == null)
             {
                 throw new ArgumentNullException(nameof(array));
             }
 
-            if(pattern == null)
+            if (pattern == null)
             {
                 throw new ArgumentNullException(nameof(pattern));
             }
 
-            if(array.Length == 0 || pattern.Length == 0)
+            if (array.Length == 0 || pattern.Length == 0)
             {
                 return false;
             }
 
-            for(int i = 0; i < array.Length - pattern.Length + 1; i++)
+            for (int i = 0; i < array.Length - pattern.Length + 1; i++)
             {
-                if(array[i] != pattern[0])
+                if (array[i] != pattern[0])
                 {
                     continue;
                 }
 
-                for(int j = pattern.Length - 1; j >= 1; j--)
+                for (int j = pattern.Length - 1; j >= 1; j--)
                 {
-                    if(array[i + j] != pattern[j])
+                    if (array[i + j] != pattern[j])
                     {
                         break;
                     }
 
-                    if(j == 1)
+                    if (j == 1)
                     {
                         return true;
                     }
