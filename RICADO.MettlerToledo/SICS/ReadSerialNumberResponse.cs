@@ -12,8 +12,8 @@ namespace RICADO.MettlerToledo.SICS
         public string SerialNumber => _serialNumber;
 
 #if NETSTANDARD
-   protected ReadSerialNumberResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
-  {
+        protected ReadSerialNumberResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
+        {
         }
 #else
         protected ReadSerialNumberResponse(Request request, Memory<byte> responseMessage) : base(request, responseMessage)
@@ -22,10 +22,10 @@ namespace RICADO.MettlerToledo.SICS
 #endif
 
 #if NETSTANDARD
-  public static ReadSerialNumberResponse UnpackResponseMessage(ReadSerialNumberRequest request, byte[] responseMessage)
+        public static ReadSerialNumberResponse UnpackResponseMessage(ReadSerialNumberRequest request, byte[] responseMessage)
         {
- return new ReadSerialNumberResponse(request, responseMessage);
-      }
+            return new ReadSerialNumberResponse(request, responseMessage);
+        }
 #else
         public static ReadSerialNumberResponse UnpackResponseMessage(ReadSerialNumberRequest request, Memory<byte> responseMessage)
         {

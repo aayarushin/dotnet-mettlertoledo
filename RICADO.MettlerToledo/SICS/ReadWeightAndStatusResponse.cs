@@ -1,12 +1,14 @@
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadWeightAndStatusResponse : Response
     {
-        private const string SuccessMessageRegex = "^SIX1 ([SD]) 0 ([ZN]) [RN] R 0 0 0 1 [NMP] ([0-9\u0020\u002E\\-]{9}) ([0-9\u0020\u002E\\-]{9}) ([0-9\u0020\u002E\\-]{9}) (.*)$";
-        private const string OutOfRangeMessageRegex = "^SIX1 [\u002B\u002B\\-]";
+        // Support both '.' and ',' as decimal separators for international compatibility
+        private const string SuccessMessageRegex = @"^SIX1 ([SD]) 0 ([ZN]) [RN] R 0 0 0 1 [NMP] ([0-9\s\.\,\-]{9}) ([0-9\s\.\,\-]{9}) ([0-9\s\.\,\-]{9}) (.*)$";
+        private const string OutOfRangeMessageRegex = @"^SIX1 [\u002B\u002B\\-]";
         private const string FailureMessageRegex = "^SIX1 [/I]";
 
         private bool _stableStatus;
@@ -25,8 +27,8 @@ namespace RICADO.MettlerToledo.SICS
 
 #if NETSTANDARD
         protected ReadWeightAndStatusResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
-  {
-     }
+        {
+        }
 #else
         protected ReadWeightAndStatusResponse(Request request, Memory<byte> responseMessage) : base(request, responseMessage)
         {
@@ -35,8 +37,8 @@ namespace RICADO.MettlerToledo.SICS
 
 #if NETSTANDARD
         public static ReadWeightAndStatusResponse UnpackResponseMessage(ReadWeightAndStatusRequest request, byte[] responseMessage)
-  {
-       return new ReadWeightAndStatusResponse(request, responseMessage);
+        {
+            return new ReadWeightAndStatusResponse(request, responseMessage);
         }
 #else
         public static ReadWeightAndStatusResponse UnpackResponseMessage(ReadWeightAndStatusRequest request, Memory<byte> responseMessage)
@@ -70,21 +72,22 @@ namespace RICADO.MettlerToledo.SICS
 
             _centerOfZero = regexSplit[2] == "Z";
 
-            if (double.TryParse(regexSplit[3], out double grossWeight) == false)
+            // Use invariant culture for parsing to handle dot decimal separator from SICS protocol
+            if (double.TryParse(regexSplit[3], NumberStyles.Float, CultureInfo.InvariantCulture, out double grossWeight) == false)
             {
                 throw new SICSException("Failed to Read the Weight and Status. The Gross Weight was Invalid");
             }
 
             _grossWeight = grossWeight;
 
-            if (double.TryParse(regexSplit[4], out double netWeight) == false)
+            if (double.TryParse(regexSplit[4], NumberStyles.Float, CultureInfo.InvariantCulture, out double netWeight) == false)
             {
                 throw new SICSException("Failed to Read the Weight and Status. The Net Weight was Invalid");
             }
 
             _netWeight = netWeight;
 
-            if (double.TryParse(regexSplit[5], out double tareWeight) == false)
+            if (double.TryParse(regexSplit[5], NumberStyles.Float, CultureInfo.InvariantCulture, out double tareWeight) == false)
             {
                 throw new SICSException("Failed to Read the Weight and Status. The Tare Weight was Invalid");
             }

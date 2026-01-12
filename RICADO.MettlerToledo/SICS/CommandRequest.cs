@@ -15,7 +15,7 @@ namespace RICADO.MettlerToledo.SICS
         }
 
 #if NETSTANDARD
-      public void ValidateResponseMessage(byte[] responseMessage)
+        public void ValidateResponseMessage(byte[] responseMessage)
 #else
         public void ValidateResponseMessage(Memory<byte> responseMessage)
 #endif

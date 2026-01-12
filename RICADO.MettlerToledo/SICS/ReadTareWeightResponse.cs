@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadTareWeightResponse : Response
     {
-        private const string SuccessMessageRegex = "^TA A\u0020+([0-9\u002E\\-]+) (.*)$";
+        // Support both '.' and ',' as decimal separators for international compatibility
+        private const string SuccessMessageRegex = @"^TA A\u0020+([0-9\.\,\-]+) (.*)$";
         private const string FailureMessageRegex = "^TA [IL]";
 
         private double _tareWeight;
@@ -16,8 +18,8 @@ namespace RICADO.MettlerToledo.SICS
 
 #if NETSTANDARD
         protected ReadTareWeightResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
-   {
- }
+        {
+        }
 #else
         protected ReadTareWeightResponse(Request request, Memory<byte> responseMessage) : base(request, responseMessage)
         {
@@ -25,9 +27,9 @@ namespace RICADO.MettlerToledo.SICS
 #endif
 
 #if NETSTANDARD
-      public static ReadTareWeightResponse UnpackResponseMessage(ReadTareWeightRequest request, byte[] responseMessage)
-  {
-     return new ReadTareWeightResponse(request, responseMessage);
+        public static ReadTareWeightResponse UnpackResponseMessage(ReadTareWeightRequest request, byte[] responseMessage)
+        {
+            return new ReadTareWeightResponse(request, responseMessage);
         }
 #else
         public static ReadTareWeightResponse UnpackResponseMessage(ReadTareWeightRequest request, Memory<byte> responseMessage)
@@ -55,7 +57,8 @@ namespace RICADO.MettlerToledo.SICS
 
             double weight;
 
-            if (double.TryParse(regexSplit[1], out weight) == false)
+            // Use invariant culture for parsing to handle dot decimal separator from SICS protocol
+            if (double.TryParse(regexSplit[1], NumberStyles.Float, CultureInfo.InvariantCulture, out weight) == false)
             {
                 throw new SICSException("Failed to Extract a Weight Value from the Read Tare Weight Response");
             }

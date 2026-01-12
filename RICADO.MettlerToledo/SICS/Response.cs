@@ -30,12 +30,12 @@ namespace RICADO.MettlerToledo.SICS
             }
 
 #if NETSTANDARD
-         if (responseMessage.Skip(responseMessage.Length - ETXLength).Take(ETXLength).SequenceEqual(ETX) == false)
-         {
-      throw new SICSException("Invalid or Missing ETX");
- }
+            if (responseMessage.Skip(responseMessage.Length - ETXLength).Take(ETXLength).SequenceEqual(ETX) == false)
+            {
+                throw new SICSException("Invalid or Missing ETX");
+            }
 
-    string messageString = Encoding.ASCII.GetString(responseMessage.Take(responseMessage.Length - ETXLength).ToArray());
+            string messageString = Encoding.ASCII.GetString(responseMessage.Take(responseMessage.Length - ETXLength).ToArray());
 #else
 
 

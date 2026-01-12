@@ -223,10 +223,10 @@ namespace RICADO.MettlerToledo.Channels
 #if NETSTANDARD
             ReceiveMessageResult result = new ReceiveMessageResult
             {
-     Bytes = 0,
-      Packets = 0,
-   Message = new byte[0],
-   };
+                Bytes = 0,
+                Packets = 0,
+                Message = new byte[0],
+            };
 #else
             ReceiveMessageResult result = new ReceiveMessageResult
             {
@@ -251,7 +251,7 @@ namespace RICADO.MettlerToledo.Channels
                 while (DateTime.UtcNow.Subtract(startTimestamp).TotalMilliseconds < timeout && receiveCompleted == false)
                 {
 #if NETSTANDARD
-            byte[] buffer = new byte[100];
+                    byte[] buffer = new byte[100];
 #else
                     Memory<byte> buffer = new byte[100];
 #endif
@@ -265,7 +265,7 @@ namespace RICADO.MettlerToledo.Channels
                         if (receivedBytes > 0)
                         {
 #if NETSTANDARD
-        receivedData.AddRange(buffer.Take(receivedBytes));
+                            receivedData.AddRange(buffer.Take(receivedBytes));
 #else
                             receivedData.AddRange(buffer.Slice(0, receivedBytes).ToArray());
 #endif
@@ -335,7 +335,7 @@ namespace RICADO.MettlerToledo.Channels
             if (receivedData.Count == 0)
             {
 #if NETSTANDARD
-       return Array.Empty<byte>();
+                return Array.Empty<byte>();
 #else
                 return Memory<byte>.Empty;
 #endif

@@ -88,7 +88,7 @@ namespace RICADO.MettlerToledo.Channels
         }
 
 #if NETSTANDARD
-    public async Task<ProcessMessageResult> ProcessMessageAsync(byte[] requestMessage, ProtocolType protocol, int timeout, int retries, CancellationToken cancellationToken)
+        public async Task<ProcessMessageResult> ProcessMessageAsync(byte[] requestMessage, ProtocolType protocol, int timeout, int retries, CancellationToken cancellationToken)
 #else
         public async Task<ProcessMessageResult> ProcessMessageAsync(ReadOnlyMemory<byte> requestMessage, ProtocolType protocol, int timeout, int retries, CancellationToken cancellationToken)
 #endif
@@ -101,7 +101,7 @@ namespace RICADO.MettlerToledo.Channels
             DateTime startTimestamp = DateTime.UtcNow;
 
 #if NETSTANDARD
-    byte[] responseMessage = new byte[0];
+            byte[] responseMessage = new byte[0];
 #else
             Memory<byte> responseMessage = new Memory<byte>();
 #endif
@@ -237,7 +237,7 @@ namespace RICADO.MettlerToledo.Channels
             try
             {
 #if NETSTANDARD
-     _serialPort.Write(message, 0, message.Length);
+                _serialPort.Write(message, 0, message.Length);
                 result.Bytes = message.Length;
 #else
                 _serialPort.Write(message.ToArray(), 0, message.Length);
@@ -266,9 +266,9 @@ namespace RICADO.MettlerToledo.Channels
 #if NETSTANDARD
             ReceiveMessageResult result = new ReceiveMessageResult
             {
-  Bytes = 0,
-         Packets = 0,
-         Message = new byte[0],
+                Bytes = 0,
+                Packets = 0,
+                Message = new byte[0],
             };
 #else
             ReceiveMessageResult result = new ReceiveMessageResult
@@ -369,7 +369,7 @@ namespace RICADO.MettlerToledo.Channels
         }
 
 #if NETSTANDARD
-   private byte[] trimReceivedData(ProtocolType protocol, List<byte> receivedData)
+        private byte[] trimReceivedData(ProtocolType protocol, List<byte> receivedData)
 #else
         private Memory<byte> trimReceivedData(ProtocolType protocol, List<byte> receivedData)
 #endif
@@ -377,7 +377,7 @@ namespace RICADO.MettlerToledo.Channels
             if (receivedData.Count == 0)
             {
 #if NETSTANDARD
-           return Array.Empty<byte>();
+                return Array.Empty<byte>();
 #else
                 return Memory<byte>.Empty;
 #endif

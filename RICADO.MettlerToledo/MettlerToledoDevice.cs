@@ -27,6 +27,7 @@ namespace RICADO.MettlerToledo
         private readonly object _isInitializedLock = new object();
 
         private IChannel _channel;
+        private readonly IChannelFactory _channelFactory;
 
         private ProtocolType _protocolType;
 
@@ -87,11 +88,14 @@ namespace RICADO.MettlerToledo
             }
         }
 
-        public MettlerToledoDevice(ConnectionMethod connectionMethod, ProtocolType protocolType, string remoteHost, int port, int timeout = 2000, int retries = 1)
+        /// <summary>
+        /// Internal constructor for dependency injection of channel factory (used by tests)
+        /// </summary>
+        internal MettlerToledoDevice(ConnectionMethod connectionMethod, ProtocolType protocolType, string remoteHost, int port, int timeout, int retries, IChannelFactory channelFactory)
         {
             _connectionMethod = connectionMethod;
-
             _protocolType = protocolType;
+            _channelFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
 
             if (remoteHost == null)
             {
@@ -127,11 +131,14 @@ namespace RICADO.MettlerToledo
             _retries = retries;
         }
 
-        public MettlerToledoDevice(ProtocolType protocolType, string portName, int baudRate = 9600, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One, Handshake handshake = Handshake.None, int timeout = 2000, int retries = 1)
+        /// <summary>
+        /// Internal constructor for dependency injection of channel factory (used by tests)
+        /// </summary>
+        internal MettlerToledoDevice(ProtocolType protocolType, string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, Handshake handshake, int timeout, int retries, IChannelFactory channelFactory)
         {
             _connectionMethod = ConnectionMethod.Serial;
-
             _protocolType = protocolType;
+            _channelFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
 
             if (portName == null)
             {
@@ -190,13 +197,13 @@ namespace RICADO.MettlerToledo
                 }
             }
 
-            // Initialize the Channel
+            // Initialize the Channel using factory
             switch (_connectionMethod)
             {
                 case ConnectionMethod.Ethernet:
                     try
                     {
-                        _channel = new EthernetChannel(_remoteHost, _port);
+                        _channel = _channelFactory.CreateEthernetChannel(_remoteHost, _port);
 
                         await _channel.InitializeAsync(_timeout, cancellationToken);
                     }
@@ -217,7 +224,7 @@ namespace RICADO.MettlerToledo
                 case ConnectionMethod.Serial:
                     try
                     {
-                        _channel = new SerialChannel(_portName, _baudRate, _parity, _dataBits, _stopBits, _handshake);
+                        _channel = _channelFactory.CreateSerialChannel(_portName, _baudRate, _parity, _dataBits, _stopBits, _handshake);
 
                         await _channel.InitializeAsync(_timeout, cancellationToken);
                     }

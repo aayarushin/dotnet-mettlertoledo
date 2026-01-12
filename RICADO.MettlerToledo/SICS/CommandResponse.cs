@@ -11,7 +11,7 @@ namespace RICADO.MettlerToledo.SICS
 
 #if NETSTANDARD
         protected CommandResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
-     {
+        {
         }
 #else
         protected CommandResponse(Request request, Memory<byte> responseMessage) : base(request, responseMessage)
@@ -20,9 +20,9 @@ namespace RICADO.MettlerToledo.SICS
 #endif
 
 #if NETSTANDARD
-   public static void ValidateResponseMessage(CommandRequest request, byte[] responseMessage)
-   {
- _ = new CommandResponse(request, responseMessage);
+        public static void ValidateResponseMessage(CommandRequest request, byte[] responseMessage)
+        {
+            _ = new CommandResponse(request, responseMessage);
         }
 #else
         public static void ValidateResponseMessage(CommandRequest request, Memory<byte> responseMessage)

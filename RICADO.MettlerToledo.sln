@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32002.185
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{353f6e1f-cd53-4b6b-9c79-6ed4bab35154}") = "RICADO.MettlerToledo", "RICADO.MettlerToledo\RICADO.MettlerToledo.csproj", "{4346de5f-4670-4788-a2ba-ced558bc2433}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RICADO.MettlerToledo", "RICADO.MettlerToledo\RICADO.MettlerToledo.csproj", "{4346DE5F-4670-4788-A2BA-CED558BC2433}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RICADO.MettlerToledo.Tests", "RICADO.MettlerToledo.Tests\RICADO.MettlerToledo.Tests.csproj", "{4D1F33AC-6DA9-0E7D-BBE5-5FA58D57C309}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4346de5f-4670-4788-a2ba-ced558bc2433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4346de5f-4670-4788-a2ba-ced558bc2433}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4346de5f-4670-4788-a2ba-ced558bc2433}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4346de5f-4670-4788-a2ba-ced558bc2433}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4346DE5F-4670-4788-A2BA-CED558BC2433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4346DE5F-4670-4788-A2BA-CED558BC2433}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4346DE5F-4670-4788-A2BA-CED558BC2433}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4346DE5F-4670-4788-A2BA-CED558BC2433}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D1F33AC-6DA9-0E7D-BBE5-5FA58D57C309}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D1F33AC-6DA9-0E7D-BBE5-5FA58D57C309}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D1F33AC-6DA9-0E7D-BBE5-5FA58D57C309}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D1F33AC-6DA9-0E7D-BBE5-5FA58D57C309}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

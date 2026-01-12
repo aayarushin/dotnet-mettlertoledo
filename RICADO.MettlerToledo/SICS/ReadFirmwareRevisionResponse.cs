@@ -13,8 +13,8 @@ namespace RICADO.MettlerToledo.SICS
 
 #if NETSTANDARD
         protected ReadFirmwareRevisionResponse(Request request, byte[] responseMessage) : base(request, responseMessage)
-      {
-  }
+        {
+        }
 #else
         protected ReadFirmwareRevisionResponse(Request request, Memory<byte> responseMessage) : base(request, responseMessage)
         {
@@ -22,9 +22,9 @@ namespace RICADO.MettlerToledo.SICS
 #endif
 
 #if NETSTANDARD
-     public static ReadFirmwareRevisionResponse UnpackResponseMessage(ReadFirmwareRevisionRequest request, byte[] responseMessage)
- {
-  return new ReadFirmwareRevisionResponse(request, responseMessage);
+        public static ReadFirmwareRevisionResponse UnpackResponseMessage(ReadFirmwareRevisionRequest request, byte[] responseMessage)
+        {
+            return new ReadFirmwareRevisionResponse(request, responseMessage);
         }
 #else
         public static ReadFirmwareRevisionResponse UnpackResponseMessage(ReadFirmwareRevisionRequest request, Memory<byte> responseMessage)

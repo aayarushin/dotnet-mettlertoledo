@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace RICADO.MettlerToledo.SICS
 {
     internal class ReadNetWeightResponse : Response
     {
-        private const string SuccessMessageRegex = "^S [SD]\u0020+([0-9\u002E\\-]+) (.*)$";
+        // Support both '.' and ',' as decimal separators for international compatibility
+        private const string SuccessMessageRegex = @"^S [SD]\u0020+([0-9\.\,\-]+) (.*)$";
         private const string OutOfRangeMessageRegex = "^S [\u002B\\-\u002D]";
         private const string FailureMessageRegex = "^S [AI]";
 
@@ -60,7 +62,8 @@ namespace RICADO.MettlerToledo.SICS
 
             double weight;
 
-            if (double.TryParse(regexSplit[1], out weight) == false)
+            // Use invariant culture for parsing to handle dot decimal separator from SICS protocol
+            if (double.TryParse(regexSplit[1], NumberStyles.Float, CultureInfo.InvariantCulture, out weight) == false)
             {
                 throw new SICSException("Failed to Extract a Weight Value from the Read Net Weight Response");
             }
