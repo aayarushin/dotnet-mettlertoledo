@@ -4,7 +4,11 @@ using System.IO.Ports;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using RICADO.MettlerToledo;
 using RICADO.MettlerToledo.Channels;
+using RICADO.MettlerToledo.DependencyInjection;
+using RICADO.MettlerToledo.Tests.DependencyInjection;
 using RICADO.MettlerToledo.Tests.Emulators;
 using RICADO.MettlerToledo.Tests.Mocks;
 using Xunit;
@@ -14,19 +18,38 @@ namespace RICADO.MettlerToledo.Tests.Unit
     /// <summary>
     /// Unit tests specifically for the RS-232 Serial Channel implementation
     /// </summary>
-    public class SerialChannelTests
+    public class SerialChannelTests : IDisposable
     {
+        private readonly ServiceCollection _services;
+        private ServiceProvider _serviceProvider;
+        private IMettlerToledoDeviceFactory _deviceFactory;
+        private IChannelFactory _channelFactory;
+
+        public SerialChannelTests()
+        {
+            _services = new ServiceCollection();
+            _services.AddMettlerToledo();
+            _serviceProvider = _services.BuildServiceProvider();
+            _deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+            _channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+        }
+
+        public void Dispose()
+        {
+            _serviceProvider?.Dispose();
+        }
+
         [Fact]
         public void SerialChannel_Constructor_SetsProperties()
         {
             // Arrange & Act
-            var channel = new SerialChannel(
+            var channel = _channelFactory.CreateSerialChannel(
                 portName: "COM1",
                 baudRate: 9600,
                 parity: Parity.None,
                 dataBits: 8,
                 stopBits: StopBits.One,
-                handshake: Handshake.None);
+                handshake: Handshake.None) as SerialChannel;
 
             // Assert
             Assert.Equal("COM1", channel.PortName);
@@ -45,7 +68,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
             string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, Handshake handshake)
         {
             // Arrange & Act
-            var channel = new SerialChannel(portName, baudRate, parity, dataBits, stopBits, handshake);
+            var channel = _channelFactory.CreateSerialChannel(
+                portName, baudRate, parity, dataBits, stopBits, handshake) as SerialChannel;
 
             // Assert
             Assert.Equal(portName, channel.PortName);
@@ -60,7 +84,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public void SerialChannel_Dispose_DoesNotThrow()
         {
             // Arrange
-            var channel = new SerialChannel("COM1", 9600, Parity.None, 8, StopBits.One, Handshake.None);
+            var channel = _channelFactory.CreateSerialChannel(
+                "COM1", 9600, Parity.None, 8, StopBits.One, Handshake.None) as SerialChannel;
 
             // Act & Assert
             var exception = Record.Exception(() => channel.Dispose());
@@ -71,7 +96,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public void SerialChannel_DoubleDispose_DoesNotThrow()
         {
             // Arrange
-            var channel = new SerialChannel("COM1", 9600, Parity.None, 8, StopBits.One, Handshake.None);
+            var channel = _channelFactory.CreateSerialChannel(
+                "COM1", 9600, Parity.None, 8, StopBits.One, Handshake.None) as SerialChannel;
 
             // Act & Assert
             channel.Dispose();
@@ -82,11 +108,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [Fact]
         public async Task MettlerToledoDevice_SerialConstructor_SetsPropertiesCorrectly()
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act
-            var device = factory.CreateSerialDevice(
+            // Arrange & Act
+            var device = _deviceFactory.CreateSerialDevice(
                 protocolType: ProtocolType.SICS,
                 portName: "COM1",
                 baudRate: 9600,
@@ -109,7 +132,7 @@ namespace RICADO.MettlerToledo.Tests.Unit
             Assert.Equal(1, device.Retries);
             Assert.Equal(ProtocolType.SICS, device.ProtocolType);
 
-            await Task.CompletedTask; // Suppress async warning
+            await Task.CompletedTask;
         }
 
         [Theory]
@@ -117,18 +140,15 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData("")]
         public void MettlerToledoDevice_SerialConstructor_InvalidPortName_ThrowsException(string invalidPortName)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
+            // Arrange & Act & Assert
             if (invalidPortName == null)
             {
-                Assert.Throws<ArgumentNullException>(() => factory.CreateSerialDevice(
+                Assert.Throws<ArgumentNullException>(() => _deviceFactory.CreateSerialDevice(
                     ProtocolType.SICS, invalidPortName, 9600));
             }
             else
             {
-                Assert.Throws<ArgumentException>(() => factory.CreateSerialDevice(
+                Assert.Throws<ArgumentException>(() => _deviceFactory.CreateSerialDevice(
                     ProtocolType.SICS, invalidPortName, 9600));
             }
         }
@@ -139,11 +159,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData(-9600)]
         public void MettlerToledoDevice_SerialConstructor_InvalidBaudRate_ThrowsException(int invalidBaudRate)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
-            Assert.Throws<ArgumentOutOfRangeException>(() => factory.CreateSerialDevice(
+            // Arrange & Act & Assert
+            Assert.Throws<ArgumentOutOfRangeException>(() => _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS, "COM1", invalidBaudRate));
         }
 
@@ -153,11 +170,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData(0)]
         public void MettlerToledoDevice_SerialConstructor_InvalidDataBits_ThrowsException(int invalidDataBits)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
-            Assert.Throws<ArgumentOutOfRangeException>(() => factory.CreateSerialDevice(
+            // Arrange & Act & Assert
+            Assert.Throws<ArgumentOutOfRangeException>(() => _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS, "COM1", 9600, Parity.None, invalidDataBits));
         }
 
@@ -168,11 +182,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData(8)]
         public void MettlerToledoDevice_SerialConstructor_ValidDataBits_DoesNotThrow(int validDataBits)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
-            var exception = Record.Exception(() => factory.CreateSerialDevice(
+            // Arrange & Act & Assert
+            var exception = Record.Exception(() => _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS, "COM1", 9600, Parity.None, validDataBits));
             Assert.Null(exception);
         }
@@ -180,11 +191,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [Fact]
         public void MettlerToledoDevice_SerialConstructor_DefaultValues_AreCorrect()
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act
-            var device = factory.CreateSerialDevice(ProtocolType.SICS, "COM1");
+            // Arrange & Act
+            var device = _deviceFactory.CreateSerialDevice(ProtocolType.SICS, "COM1");
 
             // Assert
             Assert.Equal(9600, device.BaudRate);
@@ -207,11 +215,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData(115200)]
         public void MettlerToledoDevice_SerialConstructor_CommonBaudRates_Work(int baudRate)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
-            var exception = Record.Exception(() => factory.CreateSerialDevice(
+            // Arrange & Act & Assert
+            var exception = Record.Exception(() => _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS, "COM1", baudRate));
             Assert.Null(exception);
         }
@@ -242,9 +247,10 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public void SerialChannel_Properties_AreInternal()
         {
             // Arrange
-            var channel = new SerialChannel("COM1", 9600, Parity.None, 8, StopBits.One, Handshake.None);
+            var channel = _channelFactory.CreateSerialChannel(
+                "COM1", 9600, Parity.None, 8, StopBits.One, Handshake.None) as SerialChannel;
 
-            // Assert - Properties should be accessible since we have InternalsVisibleTo
+            // Assert
             Assert.Equal("COM1", channel.PortName);
             Assert.Equal(9600, channel.BaudRate);
             Assert.Equal(Parity.None, channel.Parity);
@@ -252,22 +258,20 @@ namespace RICADO.MettlerToledo.Tests.Unit
             Assert.Equal(StopBits.One, channel.StopBits);
             Assert.Equal(Handshake.None, channel.Handshake);
 
-            // Verify these are internal properties (not public)
             var portNameProperty = typeof(SerialChannel).GetProperty("PortName",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            Assert.Null(portNameProperty); // Should not be public
+            Assert.Null(portNameProperty);
 
             var internalPortNameProperty = typeof(SerialChannel).GetProperty("PortName",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Assert.NotNull(internalPortNameProperty); // Should be internal
+            Assert.NotNull(internalPortNameProperty);
         }
 
         [Fact]
         public async Task MettlerToledoDevice_SerialDevice_CanBeCreatedAndDisposed()
         {
             // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-            var device = factory.CreateSerialDevice(
+            var device = _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "COM1",
                 baudRate: 9600,
@@ -276,21 +280,18 @@ namespace RICADO.MettlerToledo.Tests.Unit
                 stopBits: StopBits.One,
                 handshake: Handshake.None);
 
-            // Act & Assert - Should not throw
+            // Act & Assert
             var exception = Record.Exception(() => device.Dispose());
             Assert.Null(exception);
 
-            await Task.CompletedTask; // Suppress async warning
+            await Task.CompletedTask;
         }
 
         [Fact]
         public async Task MettlerToledoDevice_SerialConstructor_WithAllParameters_CreatesDevice()
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act
-            var device = factory.CreateSerialDevice(
+            // Arrange & Act
+            var device = _deviceFactory.CreateSerialDevice(
                 protocolType: ProtocolType.SICS,
                 portName: "COM3",
                 baudRate: 19200,
@@ -313,7 +314,7 @@ namespace RICADO.MettlerToledo.Tests.Unit
             Assert.Equal(5000, device.Timeout);
             Assert.Equal(3, device.Retries);
 
-            await Task.CompletedTask; // Suppress async warning
+            await Task.CompletedTask;
         }
 
         [Theory]
@@ -324,11 +325,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData(Parity.Space)]
         public void MettlerToledoDevice_SerialConstructor_AllParityOptions_Work(Parity parity)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
-            var exception = Record.Exception(() => factory.CreateSerialDevice(
+            // Arrange & Act & Assert
+            var exception = Record.Exception(() => _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS, "COM1", 9600, parity));
             Assert.Null(exception);
         }
@@ -340,11 +338,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData(StopBits.Two)]
         public void MettlerToledoDevice_SerialConstructor_AllStopBitsOptions_Work(StopBits stopBits)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
-            var exception = Record.Exception(() => factory.CreateSerialDevice(
+            // Arrange & Act & Assert
+            var exception = Record.Exception(() => _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS, "COM1", 9600, Parity.None, 8, stopBits));
             Assert.Null(exception);
         }
@@ -356,11 +351,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [InlineData(Handshake.RequestToSendXOnXOff)]
         public void MettlerToledoDevice_SerialConstructor_AllHandshakeOptions_Work(Handshake handshake)
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act & Assert
-            var exception = Record.Exception(() => factory.CreateSerialDevice(
+            // Arrange & Act & Assert
+            var exception = Record.Exception(() => _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS, "COM1", 9600, Parity.None, 8, StopBits.One, handshake));
             Assert.Null(exception);
         }
@@ -368,11 +360,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [Fact]
         public void MettlerToledoDevice_SerialConstructor_LinuxPortName_Works()
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act
-            var device = factory.CreateSerialDevice(
+            // Arrange & Act
+            var device = _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "/dev/ttyUSB0");
 
@@ -384,11 +373,8 @@ namespace RICADO.MettlerToledo.Tests.Unit
         [Fact]
         public void MettlerToledoDevice_SerialConstructor_MacPortName_Works()
         {
-            // Arrange
-            var factory = new MettlerToledoDeviceFactory();
-
-            // Act
-            var device = factory.CreateSerialDevice(
+            // Arrange & Act
+            var device = _deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "/dev/cu.usbserial");
 

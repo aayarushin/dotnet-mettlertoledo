@@ -4,17 +4,22 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using RICADO.MettlerToledo.Tests.DependencyInjection;
 using RICADO.MettlerToledo.Tests.Emulators;
 using RICADO.MettlerToledo.Tests.Mocks;
 using Xunit;
 
-namespace RICADO.MettlerToledo.Tests.Integration
+namespace RICADO.MettlerToledo.Tests.Unit
 {
     /// <summary>
     /// Integration tests demonstrating the full emulator functionality
     /// </summary>
-    public class SICSEmulatorIntegrationTests
+    public class SICSEmulatorTests : IDisposable
     {
+        private readonly ServiceCollection _services;
+        private ServiceProvider _serviceProvider;
+
         // Get the decimal separator from InvariantCulture (SICS protocol always uses dot)
         private readonly string _decimalSeparator;
 
@@ -27,8 +32,10 @@ namespace RICADO.MettlerToledo.Tests.Integration
         private readonly Regex _tareWeightRegex;
         private readonly Regex _weightAndStatusRegex;
 
-        public SICSEmulatorIntegrationTests()
+        public SICSEmulatorTests()
         {
+            _services = new ServiceCollection();
+
             // SICS protocol uses InvariantCulture (dot separator) - match emulator behavior
             _decimalSeparator = CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator;
 
@@ -48,6 +55,11 @@ namespace RICADO.MettlerToledo.Tests.Integration
             _weightAndStatusRegex =
                 new Regex(
                     $@"^SIX1 ([SD]) 0 ([ZN]) [RN] R 0 0 0 1 [NMP] ([0-9\s{decimalPattern}\-]{{9}}) ([0-9\s{decimalPattern}\-]{{9}}) ([0-9\s{decimalPattern}\-]{{9}}) (.*)$");
+        }
+
+        public void Dispose()
+        {
+            _serviceProvider?.Dispose();
         }
 
         [Fact]
@@ -72,8 +84,10 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 serialChannelFactory: (baudRate) => new MockSerialChannel(baudRate)
             );
 
-            // Create the device factory with the mock channel factory
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             // Create the device using the factory
             var device = deviceFactory.CreateEthernetDevice(
@@ -117,8 +131,10 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 serialChannelFactory: (baudRate) => new MockSerialChannel(baudRate)
             );
 
-            // Create the device factory with the mock channel factory
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             // Create the device using the factory
             var device = deviceFactory.CreateEthernetDevice(
@@ -129,7 +145,7 @@ namespace RICADO.MettlerToledo.Tests.Integration
 
             await device.InitializeAsync(CancellationToken.None);
 
-            // Act
+// Act
             var result = await device.ReadSerialNumberAsync(CancellationToken.None);
 
             // Assert
@@ -228,7 +244,11 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 serialChannelFactory: (baudRate) => new MockSerialChannel(baudRate)
             );
 
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateEthernetDevice(ProtocolType.SICS, "127.0.0.1", 8001);
 
             await device.InitializeAsync(CancellationToken.None);
@@ -262,7 +282,11 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 serialChannelFactory: (baudRate) => new MockSerialChannel(baudRate)
             );
 
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateEthernetDevice(ProtocolType.SICS, "127.0.0.1", 8001);
 
             await device.InitializeAsync(CancellationToken.None);
@@ -299,7 +323,11 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 serialChannelFactory: (baudRate) => new MockSerialChannel(baudRate)
             );
 
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateEthernetDevice(ProtocolType.SICS, "127.0.0.1", 8001);
 
             await device.InitializeAsync(CancellationToken.None);
@@ -319,7 +347,7 @@ namespace RICADO.MettlerToledo.Tests.Integration
         [InlineData(100.0, "lb")]
         public async Task TareWeight_DifferentValues_ParsedCorrectly(double tareWeight, string units)
         {
-            // Arrange
+// Arrange
             var emulator = new SICSResponseEmulator();
             emulator.SetWeight(netWeight: 100.0, tareWeight: tareWeight, units: units, isStable: true);
 
@@ -331,7 +359,11 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 serialChannelFactory: (baudRate) => new MockSerialChannel(baudRate)
             );
 
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+// Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateEthernetDevice(ProtocolType.SICS, "127.0.0.1", 8001);
 
             await device.InitializeAsync(CancellationToken.None);
@@ -511,7 +543,11 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 serialChannelFactory: (baudRate) => new MockSerialChannel(baudRate)
             );
 
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateEthernetDevice(ProtocolType.SICS, "127.0.0.1", 8001);
 
             await device.InitializeAsync(CancellationToken.None);

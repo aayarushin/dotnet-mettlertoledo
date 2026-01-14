@@ -11,20 +11,20 @@ Comprehensive test coverage for the **RS-232 Serial (ConnectionMethod.Serial)** 
 
 | Feature | Test Coverage |
 |---------|--------------|
-| **Serial Channel Properties** | ? All properties (PortName, BaudRate, Parity, DataBits, StopBits, Handshake) |
-| **Constructor Validation** | ? Null/empty port names, invalid baud rates, invalid data bits |
-| **Default Values** | ? 9600-N-8-1 with no handshake |
-| **Common Baud Rates** | ? 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 |
-| **Parity Options** | ? None, Odd, Even, Mark, Space |
-| **Stop Bits** | ? None, One, OnePointFive, Two |
-| **Handshake** | ? None, XOnXOff, RequestToSend, RequestToSendXOnXOff |
-| **Port Names** | ? Windows (COM1-255), Linux (/dev/tty*), Mac (/dev/cu.*) |
-| **Connection Method** | ? Enum value, property access |
-| **Device Creation** | ? Minimal params, full params, all combinations |
-| **Disposal** | ? Single, double, after initialization |
-| **SICS Protocol** | ? ReadSerialNumber, ReadFirmwareRevision via serial |
-| **Mock Integration** | ? Works with MockChannel and SICSResponseEmulator |
-| **Cross-Connection** | ? Serial vs Ethernet comparison |
+| **Serial Channel Properties** |  All properties (PortName, BaudRate, Parity, DataBits, StopBits, Handshake) |
+| **Constructor Validation** |  Null/empty port names, invalid baud rates, invalid data bits |
+| **Default Values** |  9600-N-8-1 with no handshake |
+| **Common Baud Rates** |  1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 |
+| **Parity Options** |  None, Odd, Even, Mark, Space |
+| **Stop Bits** |  None, One, OnePointFive, Two |
+| **Handshake** |  None, XOnXOff, RequestToSend, RequestToSendXOnXOff |
+| **Port Names** |  Windows (COM1-255), Linux (/dev/tty*), Mac (/dev/cu.*) |
+| **Connection Method** |  Enum value, property access |
+| **Device Creation** |  Minimal params, full params, all combinations |
+| **Disposal** |  Single, double, after initialization |
+| **SICS Protocol** |  ReadSerialNumber, ReadFirmwareRevision via serial |
+| **Mock Integration** |  Works with MockChannel and SICSResponseEmulator |
+| **Cross-Connection** |  Serial vs Ethernet comparison |
 
 
 
@@ -74,13 +74,13 @@ For actual hardware testing, we would need:
 - Integration tests marked with `[Trait("Category", "Hardware")]`
 
 
-## Conclusion
+## Summary
 
 The RS-232 serial port implementation is **comprehensively tested** with 60 dedicated tests (44 unit + 16 integration) covering:
 
-- ? All serial port configuration parameters
-- ? Input validation and error handling
-- ? Cross-platform port name support
-- ? Integration with SICS protocol
-- ? Mock-based end-to-end scenarios
-- ? Comparison with Ethernet implementation
+- All serial port configuration parameters
+- Input validation and error handling
+- Cross-platform port name support
+- Integration with SICS protocol
+- Mock-based end-to-end scenarios
+- Comparison with Ethernet implementation

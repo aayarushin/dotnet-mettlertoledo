@@ -8,7 +8,7 @@ namespace RICADO.MettlerToledo.Tests.Mocks
     /// Test channel factory that creates mock Ethernet and Serial channels
     /// Enables realistic behavioral testing without physical hardware
     /// </summary>
-    internal class MockChannelFactory : IChannelFactory
+    public class MockChannelFactory : IChannelFactory
     {
         private readonly Func<MockEthernetChannel> _ethernetChannelFactory;
         private readonly Func<int, MockSerialChannel> _serialChannelFactory;

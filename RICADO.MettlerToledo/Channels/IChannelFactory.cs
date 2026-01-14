@@ -7,7 +7,7 @@ namespace RICADO.MettlerToledo.Channels
     /// Factory interface for creating communication channels
     /// Enables dependency injection for testing and production scenarios
     /// </summary>
-    internal interface IChannelFactory
+    public interface IChannelFactory
     {
         /// <summary>
         /// Create an Ethernet (TCP/IP) channel

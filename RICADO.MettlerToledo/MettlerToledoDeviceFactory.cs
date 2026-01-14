@@ -6,32 +6,17 @@ namespace RICADO.MettlerToledo
 {
     /// <summary>
     /// Production factory for creating MettlerToledoDevice instances
-    /// Uses the production ChannelFactory to create real hardware connections
+    /// Uses the IChannelFactory to create hardware connections
     /// </summary>
     public class MettlerToledoDeviceFactory : IMettlerToledoDeviceFactory
     {
         private readonly IChannelFactory _channelFactory;
 
         /// <summary>
-        /// Singleton instance for production use
-        /// Uses the production ChannelFactory internally
-        /// </summary>
-        public static readonly MettlerToledoDeviceFactory Instance = new MettlerToledoDeviceFactory(ChannelFactory.Instance);
-
-        /// <summary>
-        /// Default constructor for production use
-        /// Uses the production ChannelFactory singleton
-        /// </summary>
-        public MettlerToledoDeviceFactory()
-        {
-            _channelFactory = ChannelFactory.Instance;
-        }
-
-        /// <summary>
-        /// Internal constructor for dependency injection (used by tests)
+        /// Constructor for dependency injection
         /// </summary>
         /// <param name="channelFactory">Channel factory for creating communication channels</param>
-        internal MettlerToledoDeviceFactory(IChannelFactory channelFactory)
+        public MettlerToledoDeviceFactory(IChannelFactory channelFactory)
         {
             _channelFactory = channelFactory ?? throw new ArgumentNullException(nameof(channelFactory));
         }

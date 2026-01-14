@@ -6,20 +6,8 @@ namespace RICADO.MettlerToledo.Channels
     /// <summary>
     /// Production channel factory that creates real Ethernet and Serial channels
     /// </summary>
-    internal class ChannelFactory : IChannelFactory
+    public class ChannelFactory : IChannelFactory
     {
-        /// <summary>
-        /// Singleton instance for production use
-        /// </summary>
-        public static readonly ChannelFactory Instance = new ChannelFactory();
-
-        /// <summary>
-        /// Private constructor to enforce singleton pattern
-        /// </summary>
-        private ChannelFactory()
-        {
-        }
-
         /// <summary>
         /// Create an Ethernet (TCP/IP) channel using TcpClient
         /// </summary>

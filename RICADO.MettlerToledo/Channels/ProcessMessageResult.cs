@@ -2,18 +2,18 @@
 
 namespace RICADO.MettlerToledo.Channels
 {
-    internal struct ProcessMessageResult
+    public struct ProcessMessageResult
     {
-        internal int BytesSent;
-        internal int PacketsSent;
-        internal int BytesReceived;
-        internal int PacketsReceived;
-        internal double Duration;
+        public int BytesSent;
+        public int PacketsSent;
+        public int BytesReceived;
+        public int PacketsReceived;
+        public double Duration;
 
 #if NETSTANDARD
-        internal byte[] ResponseMessage;
+        public byte[] ResponseMessage;
 #else
-        internal Memory<byte> ResponseMessage;
+        public Memory<byte> ResponseMessage;
 #endif
     }
 }

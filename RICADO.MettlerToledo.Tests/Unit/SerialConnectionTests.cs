@@ -1,20 +1,34 @@
 using System;
 using System.IO.Ports;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RICADO.MettlerToledo.Channels;
+using Microsoft.Extensions.DependencyInjection;
+using RICADO.MettlerToledo.DependencyInjection;
+using RICADO.MettlerToledo.Tests.DependencyInjection;
 using RICADO.MettlerToledo.Tests.Emulators;
 using RICADO.MettlerToledo.Tests.Mocks;
 using Xunit;
 
-namespace RICADO.MettlerToledo.Tests.Integration
+namespace RICADO.MettlerToledo.Tests.Unit
 {
     /// <summary>
     /// Integration tests for RS-232 Serial connection method
     /// </summary>
-    public class SerialConnectionIntegrationTests
+    public class SerialConnectionTests : IDisposable
     {
+        private readonly ServiceCollection _services;
+        private ServiceProvider _serviceProvider;
+
+        public SerialConnectionTests()
+        {
+            _services = new ServiceCollection();
+        }
+
+        public void Dispose()
+        {
+            _serviceProvider?.Dispose();
+        }
+
         [Fact]
         public async Task SerialDevice_WithMockChannel_ReadSerialNumber_Success()
         {
@@ -26,15 +40,16 @@ namespace RICADO.MettlerToledo.Tests.Integration
             mockChannel.ConfigureSerialNumberResponse(expectedSerialNumber);
             await mockChannel.InitializeAsync(2000, CancellationToken.None);
 
-            
+            // Create custom mock factory for this test
             var mockChannelFactory = new MockChannelFactory(
                 () => new MockEthernetChannel(),
                 (baudRate) => mockChannel);
 
-            
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
-            
             var device = deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "COM1",
@@ -64,15 +79,18 @@ namespace RICADO.MettlerToledo.Tests.Integration
             var mockChannel = CreateSerialChannelWithEmulator(emulator);
             await mockChannel.InitializeAsync(2000, CancellationToken.None);
 
-            
+
+            // Create custom mock factory for this test
             var mockChannelFactory = new MockChannelFactory(
                 () => new MockEthernetChannel(),
                 (baudRate) => mockChannel);
 
-            
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
 
-            
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "COM1",
@@ -99,15 +117,18 @@ namespace RICADO.MettlerToledo.Tests.Integration
             var mockChannel = CreateSerialChannelWithEmulator(emulator);
             await mockChannel.InitializeAsync(2000, CancellationToken.None);
 
-            
+
+            // Create custom mock factory for this test
             var mockChannelFactory = new MockChannelFactory(
                 () => new MockEthernetChannel(),
                 (baudRate) => mockChannel);
 
-            
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
 
-            
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "COM1",
@@ -129,9 +150,10 @@ namespace RICADO.MettlerToledo.Tests.Integration
         public async Task SerialDevice_DifferentConfigurations_CanBeCreated(
             string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, Handshake handshake)
         {
-            // Arrange
-            // Use production factory for configuration tests (no mocking needed)
-            var deviceFactory = new MettlerToledoDeviceFactory();
+            // Arrange - Setup DI with default mocks
+            _services.AddMettlerToledo();
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             // Act
             var device = deviceFactory.CreateSerialDevice(
@@ -167,13 +189,16 @@ namespace RICADO.MettlerToledo.Tests.Integration
             var mockChannel = CreateSerialChannelWithEmulator(emulator);
             await mockChannel.InitializeAsync(2000, CancellationToken.None);
 
-            
+            // Create custom mock factory for this test
             var mockChannelFactory = new MockChannelFactory(
                 () => new MockEthernetChannel(),
                 (baudRate) => mockChannel);
 
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
-            
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
+
             var device = deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "COM1",
@@ -210,15 +235,16 @@ namespace RICADO.MettlerToledo.Tests.Integration
             mockChannel.ConfigureSerialNumberResponse(expectedSerialNumber);
             await mockChannel.InitializeAsync(2000, CancellationToken.None);
 
-            
+            // Create custom mock factory for this test
             var mockChannelFactory = new MockChannelFactory(
                 () => new MockEthernetChannel(),
                 (br) => mockChannel);
 
-            
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
-            
             var device = deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "COM1",
@@ -241,16 +267,24 @@ namespace RICADO.MettlerToledo.Tests.Integration
             string serialSN = "SERIAL123";
             string ethernetSN = "ETHERNET456";
 
-            
+            // Create serial mock
             var serialMock = new MockSerialChannel();
             serialMock.ConfigureSerialNumberResponse(serialSN);
             await serialMock.InitializeAsync(2000, CancellationToken.None);
 
-            var serialChannelFactory = new MockChannelFactory(
-                () => new MockEthernetChannel(),
+            // Create ethernet mock
+            var ethernetMock = new MockEthernetChannel();
+            ethernetMock.ConfigureSerialNumberResponse(ethernetSN);
+            await ethernetMock.InitializeAsync(2000, CancellationToken.None);
+
+            var mockChannelFactory = new MockChannelFactory(
+                () => ethernetMock,
                 (baudRate) => serialMock);
 
-            var serialDeviceFactory = new MettlerToledoDeviceFactory(serialChannelFactory);
+            // Setup DI for serial device
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var serialDeviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             var serialDevice = serialDeviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
@@ -259,16 +293,7 @@ namespace RICADO.MettlerToledo.Tests.Integration
 
             await serialDevice.InitializeAsync(CancellationToken.None);
 
-            
-            var ethernetMock = new MockEthernetChannel();
-            ethernetMock.ConfigureSerialNumberResponse(ethernetSN);
-            await ethernetMock.InitializeAsync(2000, CancellationToken.None);
-
-            var ethernetChannelFactory = new MockChannelFactory(
-                () => ethernetMock,
-                (baudRate) => new MockSerialChannel(baudRate));
-
-            var ethernetDeviceFactory = new MettlerToledoDeviceFactory(ethernetChannelFactory);
+            var ethernetDeviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             var ethernetDevice = ethernetDeviceFactory.CreateEthernetDevice(
                 ProtocolType.SICS,
@@ -304,7 +329,10 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 () => new MockEthernetChannel(),
                 (baudRate) => mockChannel);
 
-            var deviceFactory = new MettlerToledoDeviceFactory(mockChannelFactory);
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             var device = deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
@@ -322,9 +350,10 @@ namespace RICADO.MettlerToledo.Tests.Integration
         [Fact]
         public void SerialDevice_CanCreateWithMinimalParameters()
         {
-            // Arrange
-            // Use production factory for creation tests
-            var deviceFactory = new MettlerToledoDeviceFactory();
+            // Arrange - Setup DI with default mocks
+            _services.AddMettlerToledo();
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             // Act
             var device = deviceFactory.CreateSerialDevice(
@@ -345,10 +374,12 @@ namespace RICADO.MettlerToledo.Tests.Integration
         [Fact]
         public async Task SerialDevice_PropertiesAreReadable_AfterCreation()
         {
-            // Arrange
-            // Use production factory
-            var deviceFactory = new MettlerToledoDeviceFactory();
+            // Arrange - Setup DI with default mocks
+            _services.AddMettlerToledo();
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
+            // Act
             var device = deviceFactory.CreateSerialDevice(
                 ProtocolType.SICS,
                 "COM5",
@@ -360,7 +391,7 @@ namespace RICADO.MettlerToledo.Tests.Integration
                 timeout: 3000,
                 retries: 2);
 
-            // Act & Assert
+            // Assert
             Assert.Equal("COM5", device.PortName);
             Assert.Equal(19200, device.BaudRate);
             Assert.Equal(Parity.Even, device.Parity);
@@ -385,9 +416,10 @@ namespace RICADO.MettlerToledo.Tests.Integration
         [InlineData("\\\\.\\COM10")] // Windows extended format
         public void SerialDevice_VariousPortNames_AreAccepted(string portName)
         {
-            // Arrange
-            // Use production factory
-            var deviceFactory = new MettlerToledoDeviceFactory();
+            // Arrange - Setup DI with default mocks
+            _services.AddMettlerToledo();
+            _serviceProvider = _services.BuildServiceProvider();
+            var deviceFactory = _serviceProvider.GetRequiredService<IMettlerToledoDeviceFactory>();
 
             // Act
             var device = deviceFactory.CreateSerialDevice(

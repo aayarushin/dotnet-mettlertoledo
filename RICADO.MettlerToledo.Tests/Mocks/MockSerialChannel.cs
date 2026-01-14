@@ -11,7 +11,7 @@ namespace RICADO.MettlerToledo.Tests.Mocks
     /// Mock Serial channel that emulates RS-232 serial port behavior
     /// Simulates byte-by-byte transmission, buffer management, and hardware issues
     /// </summary>
-    internal class MockSerialChannel : IChannel
+    public class MockSerialChannel : IChannel
     {
         private readonly Dictionary<string, byte[]> _responseMap;
         private bool _isPortOpen;

@@ -11,7 +11,7 @@ namespace RICADO.MettlerToledo.Tests.Mocks
     /// Mock Ethernet channel that emulates TCP/IP packet-based behavior
     /// Simulates network latency, packet fragmentation, and connection issues
     /// </summary>
-    internal class MockEthernetChannel : IChannel
+    public class MockEthernetChannel : IChannel
     {
         private readonly Dictionary<string, byte[]> _responseMap;
         private bool _isConnected;

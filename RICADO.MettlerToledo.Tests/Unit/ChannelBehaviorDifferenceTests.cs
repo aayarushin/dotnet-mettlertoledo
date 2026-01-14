@@ -2,6 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using RICADO.MettlerToledo.Channels;
+using RICADO.MettlerToledo.Tests.DependencyInjection;
 using RICADO.MettlerToledo.Tests.Mocks;
 using Xunit;
 
@@ -11,17 +14,45 @@ namespace RICADO.MettlerToledo.Tests.Unit
     /// Tests that demonstrate and validate the behavioral differences
     /// between Ethernet (TCP/IP) and Serial (RS-232) channels
     /// </summary>
-    public class ChannelBehaviorDifferenceTests
+    public class ChannelBehaviorDifferenceTests : IDisposable
     {
+        private readonly ServiceCollection _services;
+        private ServiceProvider _serviceProvider;
+
+        public ChannelBehaviorDifferenceTests()
+        {
+            _services = new ServiceCollection();
+        }
+
+        public void Dispose()
+        {
+            _serviceProvider?.Dispose();
+        }
+
         [Fact]
         public async Task EthernetChannel_HasLowerLatency_ThanSerialChannel()
         {
             // Arrange
-            var ethernetChannel = new MockEthernetChannel(latencyMs: 10);
-            var serialChannel = new MockSerialChannel(baudRate: 9600);
+            var ethernetMock = new MockEthernetChannel(latencyMs: 10);
+            var serialMock = new MockSerialChannel(baudRate: 9600);
 
-            ethernetChannel.ConfigureSerialNumberResponse("ETH001");
-            serialChannel.ConfigureSerialNumberResponse("SER001");
+            ethernetMock.ConfigureSerialNumberResponse("ETH001");
+            serialMock.ConfigureSerialNumberResponse("SER001");
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => ethernetMock,
+                (baudRate) => serialMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channels through factory
+            var ethernetChannel = channelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
+            var serialChannel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             await ethernetChannel.InitializeAsync(2000, CancellationToken.None);
             await serialChannel.InitializeAsync(2000, CancellationToken.None);
@@ -45,11 +76,26 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task SerialChannel_HasHigherPacketCount_ThanEthernet()
         {
             // Arrange
-            var ethernetChannel = new MockEthernetChannel();
-            var serialChannel = new MockSerialChannel();
+            var ethernetMock = new MockEthernetChannel();
+            var serialMock = new MockSerialChannel();
 
-            ethernetChannel.ConfigureSerialNumberResponse("ETH001");
-            serialChannel.ConfigureSerialNumberResponse("SER001");
+            ethernetMock.ConfigureSerialNumberResponse("ETH001");
+            serialMock.ConfigureSerialNumberResponse("SER001");
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => ethernetMock,
+                (baudRate) => serialMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channels through factory
+            var ethernetChannel = channelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
+            var serialChannel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             await ethernetChannel.InitializeAsync(2000, CancellationToken.None);
             await serialChannel.InitializeAsync(2000, CancellationToken.None);
@@ -77,11 +123,32 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task SerialChannel_SlowerBaudRate_IncreasesLatency(int baudRate)
         {
             // Arrange
-            var slowChannel = new MockSerialChannel(baudRate: 1200);
-            var fastChannel = new MockSerialChannel(baudRate: baudRate);
+            var slowMock = new MockSerialChannel(baudRate: 1200);
+            var fastMock = new MockSerialChannel(baudRate: baudRate);
 
-            slowChannel.ConfigureSerialNumberResponse("SLOW");
-            fastChannel.ConfigureSerialNumberResponse("FAST");
+            slowMock.ConfigureSerialNumberResponse("SLOW");
+            fastMock.ConfigureSerialNumberResponse("FAST");
+
+            // Create custom mock factory that returns the appropriate channel based on baud rate
+            MockSerialChannel capturedChannel = null;
+            var mockChannelFactory = new MockChannelFactory(
+                () => new MockEthernetChannel(),
+                (br) =>
+                {
+                    capturedChannel = br == 1200 ? slowMock : fastMock;
+                    return capturedChannel;
+                });
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channels through factory
+            var slowChannel = channelFactory.CreateSerialChannel("COM1", 1200, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
+            var fastChannel = channelFactory.CreateSerialChannel("COM2", baudRate, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             await slowChannel.InitializeAsync(2000, CancellationToken.None);
             await fastChannel.InitializeAsync(2000, CancellationToken.None);
@@ -107,11 +174,21 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task EthernetChannel_CanSimulatePacketFragmentation()
         {
             // Arrange
-            var channel = new MockEthernetChannel(simulateFragmentation: true, maxPacketSize: 10);
+            var channelMock = new MockEthernetChannel(simulateFragmentation: true, maxPacketSize: 10);
+            channelMock.ConfigureResponse("I4", "I4 A \"VERYLONGSERIALNUMBER123456789\"");
 
-            // Configure a response larger than maxPacketSize
-            channel.ConfigureResponse("I4", "I4 A \"VERYLONGSERIALNUMBER123456789\"");
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => channelMock,
+                (baudRate) => new MockSerialChannel(baudRate));
 
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channel through factory
+            var channel = channelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
             await channel.InitializeAsync(2000, CancellationToken.None);
 
             var request = System.Text.Encoding.ASCII.GetBytes("I4\r\n");
@@ -130,8 +207,23 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task SerialChannel_InitializationTakesLonger_ThanEthernet()
         {
             // Arrange
-            var ethernetChannel = new MockEthernetChannel(latencyMs: 10);
-            var serialChannel = new MockSerialChannel();
+            var ethernetMock = new MockEthernetChannel(latencyMs: 10);
+            var serialMock = new MockSerialChannel();
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => ethernetMock,
+                (baudRate) => serialMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channels through factory
+            var ethernetChannel = channelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
+            var serialChannel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             var stopwatch = new Stopwatch();
 
@@ -155,35 +247,75 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task EthernetChannel_NetworkLatency_AffectsDuration()
         {
             // Arrange
-            var lowLatencyChannel = new MockEthernetChannel(latencyMs: 5);
-            var highLatencyChannel = new MockEthernetChannel(latencyMs: 50);
+            var lowLatencyMock = new MockEthernetChannel(latencyMs: 5);
+            var highLatencyMock = new MockEthernetChannel(latencyMs: 50);
 
-            lowLatencyChannel.ConfigureSerialNumberResponse("LOW");
-            highLatencyChannel.ConfigureSerialNumberResponse("HIGH");
+            lowLatencyMock.ConfigureSerialNumberResponse("LOW");
+            highLatencyMock.ConfigureSerialNumberResponse("HIGH");
 
-            await lowLatencyChannel.InitializeAsync(2000, CancellationToken.None);
-            await highLatencyChannel.InitializeAsync(2000, CancellationToken.None);
+            // Create two separate service providers for different latency configurations
+            var lowLatencyFactory = new MockChannelFactory(
+                () => lowLatencyMock,
+                (baudRate) => new MockSerialChannel(baudRate));
 
-            var request = System.Text.Encoding.ASCII.GetBytes("I4\r\n");
+            _services.AddMettlerToledoMocks(lowLatencyFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var lowChannelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
 
-            // Act
-            var lowLatencyResult = await lowLatencyChannel.ProcessMessageAsync(
-                request, ProtocolType.SICS, 2000, 0, CancellationToken.None);
+            var highLatencyServices = new ServiceCollection();
+            var highLatencyFactory = new MockChannelFactory(
+                () => highLatencyMock,
+                (baudRate) => new MockSerialChannel(baudRate));
 
-            var highLatencyResult = await highLatencyChannel.ProcessMessageAsync(
-                request, ProtocolType.SICS, 2000, 0, CancellationToken.None);
+            highLatencyServices.AddMettlerToledoMocks(highLatencyFactory);
+            using (var highServiceProvider = highLatencyServices.BuildServiceProvider())
+            {
+                var highChannelFactory = highServiceProvider.GetRequiredService<IChannelFactory>();
 
-            // Assert
-            Assert.True(highLatencyResult.Duration > lowLatencyResult.Duration,
-                $"High latency ({highLatencyResult.Duration}ms) should be slower than low latency ({lowLatencyResult.Duration}ms)");
+                // Get channels through factories
+                var lowLatencyChannel =
+                    lowChannelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
+                var highLatencyChannel =
+                    highChannelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
+
+                await lowLatencyChannel.InitializeAsync(2000, CancellationToken.None);
+                await highLatencyChannel.InitializeAsync(2000, CancellationToken.None);
+
+                var request = System.Text.Encoding.ASCII.GetBytes("I4\r\n");
+
+                // Act
+                var lowLatencyResult = await lowLatencyChannel.ProcessMessageAsync(
+                    request, ProtocolType.SICS, 2000, 0, CancellationToken.None);
+
+                var highLatencyResult = await highLatencyChannel.ProcessMessageAsync(
+                    request, ProtocolType.SICS, 2000, 0, CancellationToken.None);
+
+                // Assert
+                Assert.True(highLatencyResult.Duration > lowLatencyResult.Duration,
+                    $"High latency ({highLatencyResult.Duration}ms) should be slower than low latency ({lowLatencyResult.Duration}ms)");
+            }
         }
 
         [Fact]
         public async Task SerialChannel_BufferProperty_IsAccessible()
         {
             // Arrange
-            var channel = new MockSerialChannel();
-            channel.ConfigureSerialNumberResponse("TEST");
+            var channelMock = new MockSerialChannel();
+            channelMock.ConfigureSerialNumberResponse("TEST");
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => new MockEthernetChannel(),
+                (baudRate) => channelMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channel through factory
+            var channel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             await channel.InitializeAsync(2000, CancellationToken.None);
 
@@ -201,9 +333,21 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task EthernetChannel_Disconnect_ThrowsException()
         {
             // Arrange
-            var channel = new MockEthernetChannel();
-            channel.ConfigureSerialNumberResponse("TEST");
+            var channelMock = new MockEthernetChannel();
+            channelMock.ConfigureSerialNumberResponse("TEST");
 
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => channelMock,
+                (baudRate) => new MockSerialChannel(baudRate));
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channel through factory
+            var channel = channelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
             await channel.InitializeAsync(2000, CancellationToken.None);
 
             // Simulate connection loss
@@ -223,8 +367,22 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task SerialChannel_Disconnect_ThrowsException()
         {
             // Arrange
-            var channel = new MockSerialChannel();
-            channel.ConfigureSerialNumberResponse("TEST");
+            var channelMock = new MockSerialChannel();
+            channelMock.ConfigureSerialNumberResponse("TEST");
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => new MockEthernetChannel(),
+                (baudRate) => channelMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channel through factory
+            var channel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             await channel.InitializeAsync(2000, CancellationToken.None);
 
@@ -245,9 +403,21 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task EthernetChannel_Reconnect_RestoresConnection()
         {
             // Arrange
-            var channel = new MockEthernetChannel();
-            channel.ConfigureSerialNumberResponse("TEST");
+            var channelMock = new MockEthernetChannel();
+            channelMock.ConfigureSerialNumberResponse("TEST");
 
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => channelMock,
+                (baudRate) => new MockSerialChannel(baudRate));
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channel through factory
+            var channel = channelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
             await channel.InitializeAsync(2000, CancellationToken.None);
             channel.SimulateDisconnect();
 
@@ -267,8 +437,22 @@ namespace RICADO.MettlerToledo.Tests.Unit
         public async Task SerialChannel_Reconnect_RestoresConnection()
         {
             // Arrange
-            var channel = new MockSerialChannel();
-            channel.ConfigureSerialNumberResponse("TEST");
+            var channelMock = new MockSerialChannel();
+            channelMock.ConfigureSerialNumberResponse("TEST");
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => new MockEthernetChannel(),
+                (baudRate) => channelMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channel through factory
+            var channel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             await channel.InitializeAsync(2000, CancellationToken.None);
             channel.SimulateDisconnect();
@@ -291,11 +475,26 @@ namespace RICADO.MettlerToledo.Tests.Unit
             // Arrange
             string expectedSerialNumber = "SAME123";
 
-            var ethernetChannel = new MockEthernetChannel();
-            var serialChannel = new MockSerialChannel();
+            var ethernetMock = new MockEthernetChannel();
+            var serialMock = new MockSerialChannel();
 
-            ethernetChannel.ConfigureSerialNumberResponse(expectedSerialNumber);
-            serialChannel.ConfigureSerialNumberResponse(expectedSerialNumber);
+            ethernetMock.ConfigureSerialNumberResponse(expectedSerialNumber);
+            serialMock.ConfigureSerialNumberResponse(expectedSerialNumber);
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => ethernetMock,
+                (baudRate) => serialMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channels through factory
+            var ethernetChannel = channelFactory.CreateEthernetChannel("127.0.0.1", 8001) as MockEthernetChannel;
+            var serialChannel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             await ethernetChannel.InitializeAsync(2000, CancellationToken.None);
             await serialChannel.InitializeAsync(2000, CancellationToken.None);
@@ -327,7 +526,21 @@ var ethernetResponse = System.Text.Encoding.ASCII.GetString(ethernetResult.Respo
         public void SerialChannel_ClearBuffer_EmptiesBuffer()
         {
             // Arrange
-            var channel = new MockSerialChannel();
+            var channelMock = new MockSerialChannel();
+
+            // Create custom mock factory
+            var mockChannelFactory = new MockChannelFactory(
+                () => new MockEthernetChannel(),
+                (baudRate) => channelMock);
+
+            // Setup DI with custom mock factory
+            _services.AddMettlerToledoMocks(mockChannelFactory);
+            _serviceProvider = _services.BuildServiceProvider();
+            var channelFactory = _serviceProvider.GetRequiredService<IChannelFactory>();
+
+            // Get channel through factory
+            var channel = channelFactory.CreateSerialChannel("COM1", 9600, System.IO.Ports.Parity.None, 8,
+                System.IO.Ports.StopBits.One, System.IO.Ports.Handshake.None) as MockSerialChannel;
 
             // Act
             channel.ClearBuffer();

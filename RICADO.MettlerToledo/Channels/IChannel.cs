@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace RICADO.MettlerToledo.Channels
 {
-    internal interface IChannel : IDisposable
+    public interface IChannel : IDisposable
     {
         Task InitializeAsync(int timeout, CancellationToken cancellationToken);
 
