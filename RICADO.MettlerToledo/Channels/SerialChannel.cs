@@ -66,11 +66,11 @@ namespace RICADO.MettlerToledo.Channels
             _semaphore.Dispose();
         }
 
-        public Task InitializeAsync(int timeout, CancellationToken cancellationToken)
+        public async Task InitializeAsync(int timeout, CancellationToken cancellationToken)
         {
             if (!_semaphore.Wait(0))
             {
-                return _semaphore.WaitAsync(cancellationToken).ContinueWith(_ => initializePort(timeout), cancellationToken);
+                await _semaphore.WaitAsync(cancellationToken);
             }
 
             try
@@ -78,8 +78,6 @@ namespace RICADO.MettlerToledo.Channels
                 destroyPort();
 
                 initializePort(timeout);
-
-                return Task.CompletedTask;
             }
             finally
             {
@@ -169,14 +167,30 @@ namespace RICADO.MettlerToledo.Channels
                 Handshake = _handshake,
                 ReadTimeout = timeout,
                 WriteTimeout = timeout,
-                NewLine = "\r\n"
+                NewLine = "\r\n",
+                // Required for USB CDC virtual COM ports (e.g. Mettler Toledo Generic USB Serial Port Driver).
+                // Without DTR asserted the driver rejects writes immediately with an IOException.
+                DtrEnable = true,
+                RtsEnable = true,
             };
 
+            // USB CDC virtual COM ports (e.g. Mettler Toledo MT MR Balance) require
+            // DTR to be latched at the driver level before the endpoint will accept
+            // writes.  Setting DtrEnable before Open() is not always sufficient — the
+            // driver may check DTR state during USB endpoint enumeration.  A brief
+            // open-close-reopen cycle ensures the DTR signal is physically asserted
+            // and acknowledged by the device firmware before we attempt any I/O.
+            _serialPort.Open();
+            System.Threading.Thread.Sleep(250);
+            _serialPort.Close();
+            System.Threading.Thread.Sleep(250);
             _serialPort.Open();
 
-            // Clear any existing data in the buffers
+            // Give the USB-CDC driver time to stabilise before the first write.
+            System.Threading.Thread.Sleep(250);
+
+            // Clear any stale data received during port open (e.g. device banner).
             _serialPort.DiscardInBuffer();
-            _serialPort.DiscardOutBuffer();
         }
 
         private void destroyPort()
@@ -218,9 +232,9 @@ namespace RICADO.MettlerToledo.Channels
         }
 
 #if NETSTANDARD
-        private Task<SendMessageResult> sendMessageAsync(byte[] message, ProtocolType protocol, int timeout, CancellationToken cancellationToken)
+        private async Task<SendMessageResult> sendMessageAsync(byte[] message, ProtocolType protocol, int timeout, CancellationToken cancellationToken)
 #else
-        private Task<SendMessageResult> sendMessageAsync(ReadOnlyMemory<byte> message, ProtocolType protocol, int timeout, CancellationToken cancellationToken)
+        private async Task<SendMessageResult> sendMessageAsync(ReadOnlyMemory<byte> message, ProtocolType protocol, int timeout, CancellationToken cancellationToken)
 #endif
         {
             SendMessageResult result = new SendMessageResult
@@ -234,31 +248,50 @@ namespace RICADO.MettlerToledo.Channels
                 throw new MettlerToledoException("Failed to Send " + protocol + " Message to Mettler Toledo Serial Device '" + _portName + "' - The Serial Port is not Open");
             }
 
-            try
-            {
 #if NETSTANDARD
-                _serialPort.Write(message, 0, message.Length);
-                result.Bytes = message.Length;
+            byte[] data = message;
 #else
-                _serialPort.Write(message.ToArray(), 0, message.Length);
-                result.Bytes = message.Length;
+            byte[] data = message.ToArray();
 #endif
-                result.Packets = 1;
-            }
-            catch (InvalidOperationException)
+
+            // USB CDC virtual COM ports (e.g. Mettler Toledo MT MR Balance) can
+            // transiently reject writes with ERROR_SEM_TIMEOUT (IOException).
+            // Retrying with a short delay recovers from this without reopening
+            // the port.  We use synchronous SerialPort.Write here because
+            // BaseStream.WriteAsync can hang indefinitely on USB CDC endpoints
+            // (Windows does not support cancellation of overlapped serial I/O).
+            const int maxWriteAttempts = 3;
+            const int writeRetryDelayMs = 250;
+
+            for (int writeAttempt = 0; writeAttempt < maxWriteAttempts; writeAttempt++)
             {
-                throw new MettlerToledoException("Failed to Send " + protocol + " Message to Mettler Toledo Serial Device '" + _portName + "' - The Serial Port is not Open");
-            }
-            catch (TimeoutException)
-            {
-                throw new MettlerToledoException("Failed to Send " + protocol + " Message within the Timeout Period to Mettler Toledo Serial Device '" + _portName + "'");
-            }
-            catch (System.IO.IOException e)
-            {
-                throw new MettlerToledoException("Failed to Send " + protocol + " Message to Mettler Toledo Serial Device '" + _portName + "'", e);
+                try
+                {
+                    _serialPort.Write(data, 0, data.Length);
+                    result.Bytes = data.Length;
+                    result.Packets = 1;
+                    return result;
+                }
+                catch (InvalidOperationException)
+                {
+                    throw new MettlerToledoException("Failed to Send " + protocol + " Message to Mettler Toledo Serial Device '" + _portName + "' - The Serial Port is not Open");
+                }
+                catch (TimeoutException)
+                {
+                    throw new MettlerToledoException("Failed to Send " + protocol + " Message within the Timeout Period to Mettler Toledo Serial Device '" + _portName + "'");
+                }
+                catch (System.IO.IOException) when (writeAttempt < maxWriteAttempts - 1)
+                {
+                    // Short delay before retrying — gives the USB CDC endpoint time to recover
+                    await Task.Delay(writeRetryDelayMs, cancellationToken);
+                }
+                catch (System.IO.IOException e)
+                {
+                    throw new MettlerToledoException("Failed to Send " + protocol + " Message to Mettler Toledo Serial Device '" + _portName + "'", e);
+                }
             }
 
-            return Task.FromResult(result);
+            throw new MettlerToledoException("Failed to Send " + protocol + " Message to Mettler Toledo Serial Device '" + _portName + "'");
         }
 
         private async Task<ReceiveMessageResult> receiveMessageAsync(ProtocolType protocol, int timeout, CancellationToken cancellationToken)

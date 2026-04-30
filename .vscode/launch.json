@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "WinForms Test",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-winforms",
+            "program": "${workspaceFolder}/RICADO.MettlerToledo.WinFormsTest/bin/Debug/net8.0-windows/RICADO.MettlerToledo.WinFormsTest.dll",
+            "cwd": "${workspaceFolder}/RICADO.MettlerToledo.WinFormsTest",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        }
+    ]
+}
