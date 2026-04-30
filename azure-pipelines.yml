@@ -95,12 +95,8 @@ stages:
                     packageType: 'sdk'
                     version: '8.x'
 
-                - script: |
-                    echo "Pipeline.Workspace: $(Pipeline.Workspace)"
-                    dir /s /b "$(Pipeline.Workspace)\*.nupkg"
-                  displayName: 'Debug - List nupkg files'
-
                 - powershell: |
+                    Write-Host "API Key length: $($env:NEXUS_API_KEY.Length)"
                     $files = Get-ChildItem -Path "$(Pipeline.Workspace)" -Recurse -Filter "*.nupkg"
                     if ($files.Count -eq 0) {
                       Write-Error "No .nupkg files found under $(Pipeline.Workspace)"
