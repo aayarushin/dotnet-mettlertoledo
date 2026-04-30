@@ -53,10 +53,11 @@ stages:
               mergeTestResults: true
               testRunTitle: 'Unit Tests'
 
-          - task: PublishCodeCoverageResults@2
+          - task: PublishCodeCoverageResults@1
             displayName: 'Publish code coverage'
             condition: succeededOrFailed()
             inputs:
+              codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
 
           - script: >
