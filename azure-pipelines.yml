@@ -108,7 +108,7 @@ stages:
                     }
                     foreach ($file in $files) {
                       Write-Host "Pushing $($file.FullName)"
-                      dotnet nuget push $file.FullName --source "https://nexus.omda.com/repository/CSAM-nuGet/" --api-key $env:NEXUS_API_KEY --skip-duplicate
+                      dotnet nuget push $file.FullName --source "https://nexus.myomda.com/repository/CSAM-nuGet/" --api-key $env:NEXUS_API_KEY --skip-duplicate
                       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                     }
                   displayName: 'Push to Nexus Artifactory'
