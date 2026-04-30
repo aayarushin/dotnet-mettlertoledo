@@ -4,7 +4,7 @@ trigger:
       - '*'
 
 pool:
-  name: 'Default'
+  name: 'Common'
 
 variables:
   group: NexusCredentials
