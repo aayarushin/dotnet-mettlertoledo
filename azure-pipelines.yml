@@ -81,6 +81,8 @@ stages:
     displayName: 'Publish to Nexus'
     dependsOn: Build
     condition: succeeded()
+    variables:
+      - group: NexusCredentials
     jobs:
       - deployment: PublishNuGet
         displayName: 'Push NuGet to Nexus'
@@ -95,20 +97,5 @@ stages:
                     packageType: 'sdk'
                     version: '8.x'
 
-                - powershell: |
-                    $key = $env:NEXUS_API_KEY
-                    Write-Host "API Key length: $($key.Length)"
-                    Write-Host "First char: $($key[0]) Last char: $($key[$key.Length-1])"
-                    $files = Get-ChildItem -Path "$(Pipeline.Workspace)" -Recurse -Filter "*.nupkg"
-                    if ($files.Count -eq 0) {
-                      Write-Error "No .nupkg files found under $(Pipeline.Workspace)"
-                      exit 1
-                    }
-                    foreach ($file in $files) {
-                      Write-Host "Pushing $($file.FullName)"
-                      dotnet nuget push $file.FullName --source "https://nexus.myomda.com/repository/CSAM-nuGet/" --api-key $env:NEXUS_API_KEY --skip-duplicate
-                      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-                    }
+                - script: dotnet nuget push "$(Pipeline.Workspace)\nupkg\*.nupkg" --source "https://nexus.myomda.com/repository/CSAM-nuGet/" --api-key "$(NexusApiKey)" --skip-duplicate
                   displayName: 'Push to Nexus Artifactory'
-                  env:
-                    NEXUS_API_KEY: $(NexusApiKey)
