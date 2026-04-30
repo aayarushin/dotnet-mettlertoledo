@@ -151,7 +151,7 @@ namespace RICADO.MettlerToledo.Tests.Mocks
                 // Simulate small delay between bytes at slow baud rates
                 if (_baudRate < 19200)
                 {
-                    await Task.Delay(Math.Max(1, _byteTransmissionDelayMs / 10), cancellationToken);
+                    await Task.Delay(Math.Max(1, _byteTransmissionDelayMs), cancellationToken);
                 }
             }
 
