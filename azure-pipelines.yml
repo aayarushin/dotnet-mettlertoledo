@@ -95,9 +95,15 @@ stages:
                     packageType: 'sdk'
                     version: '8.x'
 
-                - script: >
-                    dotnet nuget push "$(Pipeline.Workspace)/nupkg/*.nupkg"
-                    --source "https://nexus.omda.com/repository/CSAM-nuGet/"
-                    --api-key $(NexusApiKey)
-                    --skip-duplicate
+                - script: |
+                    echo "Pipeline.Workspace: $(Pipeline.Workspace)"
+                    dir /s /b "$(Pipeline.Workspace)\*.nupkg"
+                  displayName: 'Debug - List nupkg files'
+
+                - script: |
+                    for /r "$(Pipeline.Workspace)" %%f in (*.nupkg) do (
+                      echo Pushing %%f
+                      dotnet nuget push "%%f" --source "https://nexus.omda.com/repository/CSAM-nuGet/" --api-key $(NexusApiKey) --skip-duplicate
+                    )
+                  displayName: 'Push to Nexus Artifactory'
                   displayName: 'Push to Nexus Artifactory'
