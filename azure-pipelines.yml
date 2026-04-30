@@ -4,7 +4,7 @@ trigger:
       - '*'
 
 pool:
-  name: 'Default'
+  name: 'Common'
 
 variables:
   group: NexusCredentials
@@ -23,12 +23,6 @@ stages:
       - job: BuildAndTest
         displayName: 'Restore, Build, Test, Pack'
         steps:
-          - task: UseDotNet@2
-            displayName: 'Install .NET SDK 8.x'
-            inputs:
-              packageType: 'sdk'
-              version: '8.x'
-
           - script: dotnet restore
             displayName: 'Restore NuGet packages'
 
