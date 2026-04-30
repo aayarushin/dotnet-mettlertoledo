@@ -106,4 +106,3 @@ stages:
                       dotnet nuget push "%%f" --source "https://nexus.omda.com/repository/CSAM-nuGet/" --api-key $(NexusApiKey) --skip-duplicate
                     )
                   displayName: 'Push to Nexus Artifactory'
-                  displayName: 'Push to Nexus Artifactory'
