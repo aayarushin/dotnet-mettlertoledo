@@ -96,7 +96,9 @@ stages:
                     version: '8.x'
 
                 - powershell: |
-                    Write-Host "API Key length: $($env:NEXUS_API_KEY.Length)"
+                    $key = $env:NEXUS_API_KEY
+                    Write-Host "API Key length: $($key.Length)"
+                    Write-Host "First char: $($key[0]) Last char: $($key[$key.Length-1])"
                     $files = Get-ChildItem -Path "$(Pipeline.Workspace)" -Recurse -Filter "*.nupkg"
                     if ($files.Count -eq 0) {
                       Write-Error "No .nupkg files found under $(Pipeline.Workspace)"
