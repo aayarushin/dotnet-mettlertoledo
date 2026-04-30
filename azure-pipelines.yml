@@ -100,9 +100,15 @@ stages:
                     dir /s /b "$(Pipeline.Workspace)\*.nupkg"
                   displayName: 'Debug - List nupkg files'
 
-                - script: |
-                    for /r "$(Pipeline.Workspace)" %%f in (*.nupkg) do (
-                      echo Pushing %%f
-                      dotnet nuget push "%%f" --source "https://nexus.omda.com/repository/CSAM-nuGet/" --api-key $(NexusApiKey) --skip-duplicate
-                    )
+                - powershell: |
+                    $files = Get-ChildItem -Path "$(Pipeline.Workspace)" -Recurse -Filter "*.nupkg"
+                    if ($files.Count -eq 0) {
+                      Write-Error "No .nupkg files found under $(Pipeline.Workspace)"
+                      exit 1
+                    }
+                    foreach ($file in $files) {
+                      Write-Host "Pushing $($file.FullName)"
+                      dotnet nuget push $file.FullName --source "https://nexus.omda.com/repository/CSAM-nuGet/" --api-key $(NexusApiKey) --skip-duplicate
+                      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+                    }
                   displayName: 'Push to Nexus Artifactory'
