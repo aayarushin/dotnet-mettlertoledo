@@ -24,10 +24,10 @@ stages:
         displayName: 'Restore, Build, Test, Pack'
         steps:
           - task: UseDotNet@2
-            displayName: 'Install .NET SDK 8.x'
+            displayName: 'Install .NET SDK 9.x'
             inputs:
               packageType: 'sdk'
-              version: '8.x'
+              version: '9.x'
 
           - script: dotnet restore
             displayName: 'Restore NuGet packages'
@@ -92,10 +92,10 @@ stages:
             deploy:
               steps:
                 - task: UseDotNet@2
-                  displayName: 'Install .NET SDK 8.x'
+                  displayName: 'Install .NET SDK 9.x'
                   inputs:
                     packageType: 'sdk'
-                    version: '8.x'
+                    version: '9.x'
 
                 - script: dotnet nuget push "$(Pipeline.Workspace)\nupkg\*.nupkg" --source "https://nexus.myomda.com/repository/CSAM-nuGet/" --api-key "$(NexusApiKey)" --skip-duplicate
                   displayName: 'Push to Nexus Artifactory'
