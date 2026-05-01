@@ -5,7 +5,7 @@ namespace Omda.MettlerToledo.SICS
 {
     internal class ReadFirmwareRevisionResponse : Response
     {
-        private const string MessageRegex = "^I3 A \"([0-9A-Za-z\u002E]+)\"$";
+        private const string MessageRegex = "^I3 A \"([^\"]+)\"$";
 
         private string _version;
 

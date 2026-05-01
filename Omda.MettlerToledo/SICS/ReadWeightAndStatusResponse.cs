@@ -7,7 +7,8 @@ namespace Omda.MettlerToledo.SICS
     internal class ReadWeightAndStatusResponse : Response
     {
         // Support both '.' and ',' as decimal separators for international compatibility
-        private const string SuccessMessageRegex = @"^SIX1 ([SD]) 0 ([ZN]) [RN] R 0 0 0 1 [NMP] ([0-9\s\.\,\-]{9}) ([0-9\s\.\,\-]{9}) ([0-9\s\.\,\-]{9}) (.*)$";
+        // Flexible pattern to accommodate different scale models with varying field widths and status flags
+        private const string SuccessMessageRegex = @"^SIX1 ([SD]) \d+ ([ZN]) [RN] R \d+ \d+ \d+ \d+ [NMP]\s+([0-9\.\,\-]+)\s+([0-9\.\,\-]+)\s+([0-9\.\,\-]+)\s+(.*)$";
         private const string OutOfRangeMessageRegex = @"^SIX1 [\u002B\u002B\\-]";
         private const string FailureMessageRegex = "^SIX1 [/I]";
 

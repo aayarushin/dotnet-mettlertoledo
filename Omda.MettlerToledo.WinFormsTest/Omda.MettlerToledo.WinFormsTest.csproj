@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Omda.MettlerToledo\Omda.MettlerToledo.csproj" />
+    <PackageReference Include="Omda.MettlerToledo" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

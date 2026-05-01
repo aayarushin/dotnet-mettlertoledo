@@ -1,20 +1,20 @@
-# Dependency Injection Guide for RICADO.MettlerToledo
+# Dependency Injection Guide for Omda.MettlerToledo
 
-This guide shows how to use the RICADO.MettlerToledo library with dependency injection in your .NET applications.
+This guide shows how to use the Omda.MettlerToledo library with dependency injection in your .NET applications.
 
 ## Quick Start
 
 ### 1. Install the NuGet Package
 
 ```bash
-dotnet add package RICADO.MettlerToledo
+dotnet add package Omda.MettlerToledo
 ```
 
 ### 2. Register Services in Your Application
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
-using RICADO.MettlerToledo.DependencyInjection;
+using Omda.MettlerToledo.DependencyInjection;
 
 // In your startup/configuration code
 var services = new ServiceCollection();
@@ -28,7 +28,7 @@ var serviceProvider = services.BuildServiceProvider();
 ### 3. Use the Factory in Your Code
 
 ```csharp
-using RICADO.MettlerToledo;
+using Omda.MettlerToledo;
 using System.Threading;
 
 public class WeighingService
@@ -83,7 +83,7 @@ Low-level factory for creating communication channels (advanced scenarios only).
 
 ```csharp
 // Program.cs or Startup.cs
-using RICADO.MettlerToledo.DependencyInjection;
+using Omda.MettlerToledo.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,7 +99,7 @@ var app = builder.Build();
 ```csharp
 // WeighingController.cs
 using Microsoft.AspNetCore.Mvc;
-using RICADO.MettlerToledo;
+using Omda.MettlerToledo;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -144,8 +144,8 @@ IConfiguration configuration)
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RICADO.MettlerToledo;
-using RICADO.MettlerToledo.DependencyInjection;
+using Omda.MettlerToledo;
+using Omda.MettlerToledo.DependencyInjection;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
@@ -202,7 +202,7 @@ public class WeighingWorker : BackgroundService
 ```csharp
 // Program.cs
 using Microsoft.Extensions.DependencyInjection;
-using RICADO.MettlerToledo.DependencyInjection;
+using Omda.MettlerToledo.DependencyInjection;
 
 static class Program
 {
@@ -280,8 +280,8 @@ For your test projects, reference the test helpers:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
-using RICADO.MettlerToledo.Tests.DependencyInjection;
-using RICADO.MettlerToledo.Tests.Mocks;
+using Omda.MettlerToledo.Tests.DependencyInjection;
+using Omda.MettlerToledo.Tests.Mocks;
 
 [TestClass]
 public class WeighingServiceTests

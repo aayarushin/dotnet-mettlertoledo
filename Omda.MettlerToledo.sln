@@ -1,4 +1,3 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32002.185
@@ -8,6 +7,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Omda.MettlerToledo.Tests", "Omda.MettlerToledo.Tests\Omda.MettlerToledo.Tests.csproj", "{4D1F33AC-6DA9-0E7D-BBE5-5FA58D57C309}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Omda.MettlerToledo.WinFormsTest", "Omda.MettlerToledo.WinFormsTest\Omda.MettlerToledo.WinFormsTest.csproj", "{9952E677-0C5D-40B1-898B-E777DA94C81A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		azure-pipelines.yml = azure-pipelines.yml
+		AZURE_DEVOPS_SETUP.md = AZURE_DEVOPS_SETUP.md
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
