@@ -10,7 +10,7 @@ variables:
   group: NexusCredentials
   buildConfiguration: 'Release'
   projectPath: 'Omda.MettlerToledo/Omda.MettlerToledo.csproj'
-  testProjectPath: 'RICADO.MettlerToledo.Tests/Omda.MettlerToledo.Tests.csproj'
+  testProjectPath: 'Omda.MettlerToledo.Tests/Omda.MettlerToledo.Tests.csproj'
   nugetOutputDir: '$(Build.ArtifactStagingDirectory)/nupkg'
 
 stages:
