@@ -99,6 +99,3 @@ stages:
 
                 - script: dotnet nuget push "$(Pipeline.Workspace)\nupkg\*.nupkg" --source "https://nexus.myomda.com/repository/CSAM-nuGet/" --api-key "$(NexusApiKey)" --skip-duplicate
                   displayName: 'Push NuGet package to Nexus'
-
-                - script: dotnet nuget push "$(Pipeline.Workspace)\nupkg\*.snupkg" --source "https://nexus.myomda.com/repository/CSAM-nuGet/" --api-key "$(NexusApiKey)" --skip-duplicate
-                  displayName: 'Push symbol package to Nexus'

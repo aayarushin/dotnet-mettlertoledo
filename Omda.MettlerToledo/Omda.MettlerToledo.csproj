@@ -18,13 +18,12 @@ This package contains internal modifications by Omda AS.</Description>
     <PackageIcon>packageIcon.png</PackageIcon>
     <RepositoryUrl>https://git.myomda.com/tfs/CSAM/_git/MettlerToledoScales</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+
     <PackageTags>mettler,toledo,loadcell,mt-sics,weighing,act350,sics-protocol</PackageTags>
-    <!-- Source Link: enables stepping into source when debugging via snupkg -->
+    <!-- Source Link: enables stepping into source when debugging -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
